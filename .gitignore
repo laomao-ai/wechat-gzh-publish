@@ -1,0 +1,46 @@
+# ===== 凭证与密钥（绝不入库）=====
+config/wechat.credentials.json
+config/image_providers.json
+config/token_cache.json
+config/draft_state.json
+*.credentials.json
+!*.example.json
+.env
+*.key
+*.pem
+
+# ===== 运行时产物 =====
+__pycache__/
+*.py[cod]
+preview/
+公众号HTML输出/
+
+# ===== 第三方（clone 获得，不入库）=====
+vendor-gzh/
+
+# ===== 生图产物与配图 =====
+assets/real/
+assets/test/
+docs/images/*.png
+docs/fig*.png
+docs/fig*.jpg
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# ===== 开发过程中的文章草稿 =====
+docs/article-*.md
+docs/article-*.html
+docs/sample-intel*
+
+# ===== 编辑器与系统 =====
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ===== 但要保留这些 =====
+!config/brand_voice.json
+!config/*.example.json
+!docs/images/*.svg

@@ -1,0 +1,91 @@
+{
+  "_说明": "生图服务配置。复制本文件为 image_providers.json 后填入密钥。该文件勿提交 git。",
+  "_默认": "auto_delegate 启用时优先让宿主 Agent 自己生图，零成本且通常质量最好。",
+  "_选型建议": [
+    "本地/当前 Agent 自带生图 → 保持 auto_delegate，不需要任何 API Key",
+    "需要更好的中文文字能力 → gemini（gemini-3.x 对 CJK 支持明显更好）",
+    "需要精确文字与信息图 → openai gpt-image-2（带 thinking，对表格/数字更准）",
+    "国内直连优先 → volcengine（火山方舟，无需翻墙）",
+    "走第三方中转 → custom，填兼容 OpenAI 协议的 base_url"
+  ],
+  "auto_delegate": {
+    "enabled": true,
+    "_注释": "宿主 Agent 自生图。设 false 则强制走外部 API。"
+  },
+  "gemini": {
+    "enabled": false,
+    "base_url": "https://generativelanguage.googleapis.com",
+    "api_key": "",
+    "api": "interactions",
+    "model": "gemini-nano-banana-2.1",
+    "image_size": "2K",
+    "strict": false,
+    "_注释": [
+      "★ 默认模型 gemini-nano-banana-2.1（2026-10-07 发布，Gemini 3.6 Flash 底座）",
+      "",
+      "模型选择：",
+      "  gemini-nano-banana-2.1        最新，信息图事实性 0.521（前代 0.179），支持 1K/2K/4K",
+      "  gemini-3-pro-image            Nano Banana Pro（贵，但高分辨率可选）",
+      "  gemini-3.1-flash-image         前代，10月29日关停，别用",
+      "  gemini-2.5-flash-image         旧版，固定 1K",
+      "",
+      "价格（2026-10-07 官方）：1K $0.0336 / 2K $0.0504 / 4K $0.0756（比前代腰斩）",
+      "但输入 token 从 $0.50→$1.50/M，思考输出 $3→$7.50/M，塞大量参考图要算总账",
+      "",
+      "限制（官方自述）：1K 下小字常模糊，要精细排版直接上 2K/4K；不支持 512px",
+      "",
+      "api=interactions 用现役 Interactions API（推荐，失败自动回退 generateContent）",
+      "strict=true 时不回退，失败即抛错（调试用）",
+      "支持比例：1:1 1:4 1:8 2:3 3:2 3:4 4:1 4:3 4:5 5:4 8:1 9:16 16:9 21:9",
+      "21:9 正好是公众号头图比例，生成时直接指定可省裁切",
+      "API Key 通过 header x-goog-api-key 传递"
+    ]
+  },
+  "openai": {
+    "enabled": false,
+    "base_url": "https://api.openai.com/v1",
+    "api_key": "",
+    "model": "gpt-image-2",
+    "quality": "high",
+    "thinking": "medium",
+    "output_format": "png",
+    "_注释": [
+      "model=gpt-image-2 支持任意分辨率（两边能被 16 整除，比例 1:3~3:1），中文文字渲染最好",
+      "model=gpt-image-1/1.5 只支持固定档位 1024x1024 / 1536x1024 / 1024x1536",
+      "thinking 仅 gpt-image-2 支持（low/medium/high），对信息图/表格类更准但更贵",
+      "quality: low / medium / high / xhigh / max",
+      "gpt-image 系列需在控制台完成 Organization Verification 才能调用",
+      "第三方中转：改 base_url 为兼容地址即可，协议不变"
+    ]
+  },
+  "volcengine": {
+    "enabled": false,
+    "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+    "api_key": "",
+    "model": "doubao-seedream-4-0-250828",
+    "sequential_image_generation": "disabled",
+    "_注释": [
+      "国内直连，无需翻墙，性价比高",
+      "response_format 用 b64_json，避免二次下载",
+      "若提示 URL 过期，确认用的是 b64_json"
+    ]
+  },
+  "custom": {
+    "enabled": false,
+    "base_url": "https://your-relay.example.com/v1",
+    "api_key": "",
+    "model": "gpt-image-2",
+    "quality": "high",
+    "_注释": [
+      "第三方中转 / 自建代理。填兼容 OpenAI /images/generations 协议的 base_url 即可",
+      "Gemini 中转需兼容 Google 原生协议（/v1beta/interactions 或 /v1beta/models/{model}:generateContent）"
+    ]
+  },
+  "_比例说明": {
+    "21:9": "公众号头图标准比例（≈900×383），生图时用这个最省裁切",
+    "1:1": "分享卡片",
+    "3:4": "小红书竖图",
+    "16:9": "通用横图",
+    "_注意": "多数模型支持任意比例，直接按目标比例生成比事后裁切更省事"
+  }
+}
