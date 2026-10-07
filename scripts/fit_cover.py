@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """把 AI 生成的方形图裁成微信公众号合规封面（900×383, 2.35:1）。
 
-AI 生图的产物有两个通病，直接推微信会很难看：
-  1. 右下角有「AI生成」平台水印
-  2. 比例是 1:1，而微信封面要求 2.35:1
+AI 生图默认是 1:1，而微信封面要求 2.35:1，本脚本按比例切出横幅
+（锚点偏向文字区）并缩放到 900×383。
 
-本脚本一次处理干净：裁水印 → 按2.35:1 切横幅 → 锚点偏向文字区 → 缩放到 900×383。
+⚠️ 关于平台水印：部分生图平台会在角落打「AI 生成」标识。
+《人工智能生成合成内容标识办法》第十条明确：不得恶意删除显式标识，
+也不得为他人删除标识提供工具。因此本脚本默认**不裁水印**，
+只做比例裁切。如确需处理，请自行用 --crop-watermark 并确认合规。
 
 用法：
-  python3 fit_cover.py <生图产物.png> [-o out.jpg] [--anchor 0.22] [--no-watermark]
+  python3 fit_cover.py <生图产物.png> [-o out.jpg] [--anchor 0.22]
 """
 
 from __future__ import annotations
@@ -31,7 +33,7 @@ def fit_cover(
     src: Path,
     out: Path,
     anchor: float = 0.22,
-    crop_watermark: bool = True,
+    crop_watermark: bool = False,
     watermark_ratio: float = 0.925,
     quality: int = 94,
 ) -> Path:
@@ -68,7 +70,8 @@ def main() -> int:
     ap.add_argument("-o", "--out", default="cover-900x383.jpg", help="输出路径")
     ap.add_argument("--anchor", type=float, default=0.22,
                     help="垂直锚点 0~1，越大越靠下（0.22 能保住标题）")
-    ap.add_argument("--no-watermark", action="store_true", help="不裁底部水印")
+    ap.add_argument("--crop-watermark", action="store_true",
+                    help="裁掉底部水印带（默认不裁；注意生成合成内容标识办法第十条）")
     ap.add_argument("--watermark-ratio", type=float, default=0.925,
                     help="水印带起始位置比例，默认裁掉底部 7.5%%")
     ap.add_argument("--quality", type=int, default=94, help="JPEG 质量")
@@ -81,7 +84,7 @@ def main() -> int:
     out = fit_cover(
         src, Path(args.out),
         anchor=args.anchor,
-        crop_watermark=not args.no_watermark,
+        crop_watermark=args.crop_watermark,
         watermark_ratio=args.watermark_ratio,
         quality=args.quality,
     )

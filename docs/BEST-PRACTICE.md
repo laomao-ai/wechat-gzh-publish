@@ -98,7 +98,7 @@ python3 scripts/validate_gzh_html.py article.gzh.html
 - 有的插件本地不调微信，全部转发到自己的云端（文章和图片要上传到第三方服务器，按积分收费）
 - 有的工具是 Source Available 非开源，且"固定出口 IP"要另外收费
 
-自己写只有约 300 行、零第三方依赖，且**Secret 与正文都不出本机**。
+自己写只有约 300 行（`wechat_draft.py` 仅标准库；裁封面的 `fit_cover.py` 需 pillow），且**Secret 与正文都不出本机**。
 
 ### 核心实现要点
 
@@ -122,10 +122,11 @@ media/uploadimg                   → url
 
 云端 Agent 会反复生成、改稿。若每次都 `draft/add`，草稿箱会堆几十篇重复稿。
 
-做法：用 `sha1(title + digest)` 作 slug 记在本地状态文件里，命中则走 `draft/update`，否则 `draft/add`：
+做法：用 **Markdown 绝对路径**（或 front matter 里的 `id`）作 slug 记在本地状态文件里，
+命中则走 `draft/update`，否则 `draft/add`。**改标题、改摘要都不会另起一篇。**
 
 ```python
-slug = hashlib.sha1(f"{title}\n{digest}".encode()).hexdigest()[:16]
+slug = hashlib.sha1(f"path:{article_path.resolve()}".encode()).hexdigest()[:16]
 if state.get(slug):  draft/update (media_id=...)
 else:                 draft/add  → 记入 state
 ```
@@ -188,7 +189,7 @@ api_post("draft/update", token, {"media_id": mid, "index": 0, "articles": articl
 ```json
 {
   "primary": "moyu-green",
-  "locked": true,
+  "lock_primary": true,
   "allowed": [{
     "id": "moyu-green",
     "cover_prompt_style": "瑞士国际主义排版风格，大量留白，几何精准克制，无渐变无阴影无纹理，纯白背景，主色 #059669 作为唯一色彩锚点…"
@@ -211,8 +212,8 @@ api_post("draft/update", token, {"media_id": mid, "index": 0, "articles": articl
 | provider | 模型 | 说明 |
 |---|---|---|
 | `auto_delegate` | — | **宿主 Agent 自生图，默认首选** |
-| `openai` | `gpt-image-1` | gpt-image-1 固定档位 1024x1024 / 1536x1024 / 1024x1536 |
-| `gemini` | `gemini-2.5-flash-image` | 原生端点 + OpenAI 兼容双模式 |
+| `openai` | `gpt-image-2` | 任意分辨率（两边被 16 整除）+ thinking，中文文字最强 |
+| `gemini` | `gemini-nano-banana-2.1` | generateContent 端点，支持 21:9 等比例 |
 | `volcengine` | `doubao-seedream-4-0-250828` | 国内直连，无需翻墙 |
 | `custom` | 自定义 | 任意 OpenAI 兼容端点 |
 
@@ -236,9 +237,9 @@ AI 生图产物直接推微信会很难看，**缺一不可**：
 
 | 问题 | 处理 |
 |---|---|
-| 右下角「AI生成」平台水印 | 裁掉底部约 7.5% |
 | 比例是 1:1，微信要 2.35:1 | 裁成 900×383；**锚点取垂直 22% 处** |
 | 中文偶发字形变形 | 变形严重时改用纯色/图形封面 |
+| 平台「AI 生成」标识 | **默认不裁**——《生成合成内容标识办法》第十条禁恶意删除显式标识；发表时记得勾选 AI 内容声明 |
 
 ```bash
 python3 scripts/fit_cover.py 生图产物.png -o cover-900x383.jpg --anchor 0.22
@@ -299,11 +300,12 @@ wechat-gzh-publish/
 │   ├── token_cache.json            # access_token 缓存（自动生成）
 │   └── draft_state.json            # slug → media_id 幂等映射
 ├── docs/
-│   ├── BEST-PRACTICE.md            # 本文件
-│   └── sample-intel.md / .gzh.html # 示例与产物
-├── assets/                         # 封面图
-├── preview/                        # 带复制按钮的预览页
-└── vendor-gzh/                     # 排版组件库（clone 获得）
+│   ├── CONFIG.md                   # 配置指南（凭证 / IP 白名单 / 生图选型）
+│   └── BEST-PRACTICE.md            # 本文件
+├── references/
+│   ├── quality-check.md            # 质检框架
+│   └── title-optimize.md           # 标题优化
+└── vendor-gzh/                     # 排版组件库（clone 获得，不入库）
 ```
 
 ## 命令速查
@@ -336,7 +338,7 @@ $PY scripts/wechat_draft.py rm <media_id>
 
 - **自动发表做不到**：个人主体/未认证账号无 `freepublish` 权限（`48001`），永久限制。
 - **家宽 IP 动态**：本机跑需IP 变了重配白名单；长期方案是部署到有固定 IP 的云端 Agent。
-- **生图有水印**：AI 生图平台会在右下角打标，必须裁掉（`fit_cover.py` 已内置）。
+- **生图有标识**：AI 生图平台会在角落打「AI 生成」标识，`fit_cover.py` 默认不裁（法规要求）；发表时记得勾选 AI 内容声明。
 - **中文偶发变形**：图像模型对中文字形把握不稳，关键封面建议人工过一眼。
 
 
@@ -344,10 +346,10 @@ $PY scripts/wechat_draft.py rm <media_id>
 PY=python3
 $PY scripts/wechat_draft.py doctor                    # 体检
 $PY scripts/wechat_draft.py list                      # 列草稿
-$PY scripts/wechat_draft.py push docs/sample-intel.md \
-    --title "标题" --digest "摘要" --cover cover.jpg   # 推送
+$PY scripts/wechat_draft.py push article.md \
+    --title "标题" --digest "摘要" --cover cover.jpg   # 推送（改标题不会另起一篇）
 $PY scripts/wechat_draft.py rm <media_id>             # 删草稿
 
-$PY vendor-gzh/scripts/validate_gzh_html.py docs/sample-intel.gzh.html   # 产物关
-$PY vendor-gzh/scripts/wrap_preview.py docs/sample-intel.gzh.html preview/x.html
+$PY vendor-gzh/scripts/validate_gzh_html.py article.gzh.html   # 产物关（须 0 WARN）
+$PY vendor-gzh/scripts/wrap_preview.py article.gzh.html preview/x.html
 ```

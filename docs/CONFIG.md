@@ -62,7 +62,7 @@ chmod 600 config/wechat.credentials.json
 微信要求调用接口的**来源 IP** 在白名单里。不配会报：
 
 ```
-errcode 40164, invalid ip 223.64.75.45, ipv6 ::ffff:223.64.75.45, not in whitelist
+errcode 40164, invalid ip 203.0.113.45, ipv6 ::ffff:203.0.113.45, not in whitelist
 ```
 
 ### 2.2 在哪配
@@ -90,7 +90,7 @@ curl -s https://myip.ipip.net
 如果你不确定自己填对了没，**随便调一次接口，让微信告诉你它看到的 IP**：
 
 ```
-errcode 40164, invalid ip 223.64.75.45 ... not in whitelist
+errcode 40164, invalid ip 203.0.113.45 ... not in whitelist
                     ^^^^^^^^^^^^^^^^ 微信真实看到的
 ```
 

@@ -15,13 +15,13 @@ Markdown → 排版（校验 0 WARN）→ 封面 → 直连草稿箱 → 人工�
 
 本项目走第三条：**本地直连微信官方 API**。文章不出你的机器。
 
-## 两个别人没有的能力
+## 两个我自己最需要的能力
 
 **幂等更新** —— 改稿不堆重复草稿
 
-云端 Agent 会反复改稿。普通做法每次都 `draft/add`，草稿箱会堆几十篇重复稿。本项目用 `sha1(标题+摘要)` 作 slug 记在本地，命中走 `draft/update`，否则才新建。
+云端 Agent 会反复改稿。普通做法每次都 `draft/add`，草稿箱会堆几十篇重复稿。本项目用 Markdown 绝对路径（或 front matter 里的 `id`）作 slug 记在本地，命中走 `draft/update`，否则才新建——**改标题、改摘要都不会另起一篇**。
 
-> 这个功能看起来可有可无。但如果你经历过「改了十遍稿，草稿箱里堆了十个版本」，就知道它是刚需。。
+> 这个功能看起来可有可无。但如果你经历过「改了十遍稿，草稿箱里堆了十个版本」，就知道它是刚需。
 
 **出口 IP 双源探测** —— 解决"微信固定出口 IP"这个痛点
 
@@ -36,8 +36,8 @@ python3 scripts/wechat_draft.py doctor   # 同时探测境内/境外，明确提
 ## 快速开始
 
 ```bash
-# 1. 拉取本skill
-git clone <this-repo> && cd wechat-gzh-publish
+# 1. 拉取本 skill（放到你 Agent 的 skills 目录，见 SKILL.md 开头的安装说明）
+git clone https://github.com/laomao-ai/wechat-gzh-publish.git && cd wechat-gzh-publish
 
 # 2. 微信凭证（AppSecret 交互式输入，不回显）
 bash scripts/init_credentials.sh
@@ -49,8 +49,11 @@ curl -s https://myip.ipip.net   # 境内站才是真出口
 # 4. 体检
 python3 scripts/wechat_draft.py doctor
 
-# 5. 排版 skill
+# 5. 排版 skill（AGPL-3.0，独立 clone）
 git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git vendor-gzh
+
+# 6. 裁封面依赖（wechat_draft.py 本身仅标准库）
+pip install pillow
 ```
 
 完整配置见 **[docs/CONFIG.md](docs/CONFIG.md)**。
@@ -91,7 +94,7 @@ python3 scripts/wechat_draft.py rm <media_id>
 |---|---|
 | **「自动发表」做不到** | 2025-07 起微信回收个人主体/未认证账号的 `freepublish` 权限（报 `48001`）。**终点是草稿箱，发表必须人工点。** |
 | **动态 IP 需重配** | 家用宽带出口 IP 会变。长期方案是部署到有固定 IP 的机器。 |
-| **封面有水印** | AI 生图平台会在右下角打标，`fit_cover.py` 已内置裁掉。 |
+| **封面标识** | AI 生图平台会在角落打「AI 生成」标识，`fit_cover.py` 默认**不裁**（《生成合成内容标识办法》第十条禁恶意删除）；发表时记得勾选 AI 内容声明。 |
 | **中文偶发变形** | 图像模型对中文字形把握有限。变形严重时改用无文字封面。 |
 | **架构图别交给生图** | 图像模型画架构图文字必然错。用代码生成 SVG/HTML。 |
 
@@ -146,7 +149,7 @@ wechat-gzh-publish/
 │   ├── quality-check.md           ← 质检框架（标题/结构/内容，排版前先过一遍）
 │   └── title-optimize.md          ← 标题优化（通用规律 + 候选生成 + 打分）
 │
-├── scripts/                       ← 四个脚本，零第三方依赖
+├── scripts/                       ← 四个脚本（wechat_draft.py 仅标准库；fit_cover.py 需 pillow）
 │   ├── wechat_draft.py            ← 核心：草稿箱直连 + 幂等更新 + IP 探测
 │   ├── gen_image.py               ← 生图 provider 抽象层（5 种可选）
 │   ├── fit_cover.py               ← AI 生图 → 微信合规封面 900×383
@@ -157,7 +160,6 @@ wechat-gzh-publish/
 │   ├── wechat.credentials.example.json   ← 凭证模板
 │   └── image_providers.example.json      ← 生图配置模板
 │
-└── drafts/                        ← 内容方法论（标题/正文诊断的探索稿，当前不启用）
 ```
 
 **你需要创建的**（`.gitignore` 已排除，不会误提交）：

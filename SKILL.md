@@ -22,24 +22,47 @@ agent_created: true
 
 ---
 
+## 安装（三步，Agent 照着跑）
+
+```bash
+# 1. 本 skill：clone 到你的 Agent 的 skills 目录
+git clone https://github.com/laomao-ai/wechat-gzh-publish.git
+#   Claude Code → ~/.claude/skills/wechat-gzh-publish
+#   Codex      → ~/.codex/skills/wechat-gzh-publish
+#   Cursor     → 项目 .cursor/skills/ 或 ~/.cursor/skills/
+#   其他 Agent → 问它"你的 skills 目录在哪"，放到对应位置
+
+# 2. 排版依赖（AGPL-3.0，独立 clone，不随本仓库分发）
+git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git \
+  <skill目录>/wechat-gzh-publish/vendor-gzh
+
+# 3. Python 依赖（wechat_draft.py 仅标准库；裁封面需要 Pillow）
+pip install pillow
+```
+
+Windows 注意：`bash xxx.sh` 请用 Git Bash 或 WSL 跑；`python3` 常常叫 `python`，命令里自行替换。
+
+---
+
 ## 这个 skill 解决什么
 
 市面上公众号排版工具普遍走两条路：生成 HTML 让你手动 ⌘A⌘C 粘贴，或者把文章上传到第三方服务器换取固定出口 IP。
 
 本 skill 走另一条：**本地直连微信官方 API**。
 
-### 两个别人没有的能力
+### 两个我自己最需要的能力
 
 **1. 幂等更新（改稿不堆重复稿）**
 
 云端 Agent 会反复改稿。普通做法每次都 `draft/add`，草稿箱会堆几十篇重复稿。
 
-本 skill 用 `sha1(标题+摘要)` 作 slug 记在本地，命中走 `draft/update`，否则才新建。
+本 skill 的 slug 取自 **Markdown 的绝对路径**（或 front matter 里的 `id`），记在本地；
+命中走 `draft/update`，否则才新建。**改标题、改摘要都不会另起一篇。**
 
 ```python
-slug = make_slug(title, digest)      # sha1[:16]
-if state.get(slug):  draft/update    # 同一篇只更新
-else:                 draft/add      # → 记入 state
+slug = make_slug(article_path, front)  # sha1(path 或 id)[:16]
+if state.get(slug):  draft/update       # 同一篇只更新
+else:                 draft/add         # → 记入 state
 ```
 
 **2. 出口 IP 双源探测**
@@ -202,13 +225,13 @@ python3 scripts/fit_cover.py cover.png -o cover-900x383.jpg --anchor 0.22
 python3 scripts/wechat_draft.py cover cover-900x383.jpg       # 上传并设为默认
 ```
 
-**三件必做后处理**（`fit_cover.py` 已内置前两项）：
+**三件必做后处理**：
 
 | 问题 | 处理 |
 |---|---|
-| 右下角「AI 生成」平台水印 | 裁掉底部 7.5% |
-| 生图比例不对 | **优先按目标比例生成**（`--ratio 21:9`），比事后裁切省事 |
+| 生图比例不对 | **优先按目标比例生成**（`--ratio 21:9`），比事后裁切省事；否则 `fit_cover.py` 按 2.35:1 裁 |
 | 中文文字变形 | **严重时改用无文字封面**，别死磕 |
+| 平台「AI 生成」标识 | **默认不裁**——《生成合成内容标识办法》第十条禁恶意删除显式标识；发表时记得勾选 AI 内容声明 |
 
 ⚠️ **锚点选错会切掉标题**，务必目视检查成品。
 
@@ -263,10 +286,13 @@ python3 scripts/gen_image.py gen "提示词" --provider gemini --ratio 21:9
 
 ```bash
 python3 scripts/wechat_draft.py push article.md \
-  --title "标题" --digest "摘要"
+  --title "标题" --digest "摘要" --source-url "https://github.com/xxx"
 ```
 
-同 slug 自动走 `draft/update`，草稿箱不会堆重复稿。
+- `--title`/`--digest` 不填时，读 Markdown 顶部 front matter 的 `title`/`digest`
+- `--source-url` 填原文链接，读者点「阅读原文」跳转（公众号正文外链点不了，这是最顺手的入口）
+- 留言默认打开；`--no-comment` 可关闭
+- 同一篇文章反复推自动走 `draft/update`，草稿箱不会堆重复稿
 
 其他命令：
 
@@ -300,7 +326,7 @@ python3 scripts/wechat_draft.py doctor
 **不确定自己的 IP 对不对？直接跑一次请求，看微信报错里说的 IP**——那是它真实看到的，比任何查询都准：
 
 ```
-errcode 40164, invalid ip 223.64.75.45 ... not in whitelist
+errcode 40164, invalid ip 203.0.113.45 ... not in whitelist
                     ^^^^^^^^^^^^^^^^ 填这个
 ```
 

@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """微信草稿箱直连推送（零第三方依赖，仅标准库）
 
-复刻 wesight-obsidian 的 WeSight Cloud 中转层，直接对话微信官方 API。
+直接对话微信官方 API，不经过任何中转服务。
 
 关键设计：
 1. access_token 本地文件缓存，提前 5 分钟过期，避免并发刷新互相覆盖
-2. draft media_id → update 实现幂等：同一 slug 重复推送只更新不新建
+2. 幂等更新：slug 取自 Markdown 的绝对路径（或 front matter 里的 id），
+   同一篇文章反复推送只 update 不新建——改标题、改摘要都不会另起一篇
 3. 正文图片走 uploadimg 拿微信域名 URL；封面走 material 永久素材拿 media_id
 4. IP 白名单由调用方环境保证，本脚本不做代理
 
 用法：
   python3 wechat_draft.py doctor                    # 体检：配置/网络/权限
-  python3 wechat_draft.py push article.md --theme moyu-green --title "..." --cover cover.jpg
-  python3 wechat_draft.py list                     # 列出草稿箱最近10 条
+  python3 wechat_draft.py push article.md --title "..." --cover cover.jpg
+  python3 wechat_draft.py list                     # 列出草稿箱最近 10 条
   python3 wechat_draft.py rm <media_id>
 """
 
@@ -77,7 +78,7 @@ class WeChatError(RuntimeError):
 ERROR_HINTS = {
     40001: "AppSecret 错误，或用了 reset 前的旧值",
     40013: "AppID 不正确",
-    40164: "当前出口 IP 不在白名单。本脚本用的出口 IP 见下方 whoami",
+    40164: "当前出口 IP 不在白名单。看体检第 [1] 步的出口 IP 探测结果，或看报错里的 invalid ip",
     48001: "该账号无此接口权限。个人主体/未认证账号的 freepublish 已被回收（草稿箱接口仍可用）",
     41001: "缺少 access_token",
     45009: "接口调用超限，稍后重试",
@@ -224,7 +225,7 @@ def rewrite_images(html: str, token: str, image_refs: list[str], base_dir: Path)
     公众号不认，必须先过 uploadimg。
     """
     done: dict[str, str] = {}
-    for ref in image_refs:
+    for ref in dict.fromkeys(image_refs):  # 去重：同一张图只上传一次
         p = (base_dir / ref).resolve()
         if not p.exists():
             print(f"  ! 跳过不存在的图片: {ref}", file=sys.stderr)
@@ -237,7 +238,9 @@ def rewrite_images(html: str, token: str, image_refs: list[str], base_dir: Path)
             print(f"  ! 正文图上传失败 {ref}: {e}", file=sys.stderr)
     for ref, url in done.items():
         html = html.replace(f'src="{ref}"', f'src="{url}"')
+        html = html.replace(f"src='{ref}'", f"src='{url}'")
         html = html.replace(f'src="./{ref}"', f'src="{url}"')
+        html = html.replace(f"src='./{ref}'", f"src='{url}'")
     return html
 
 
@@ -253,8 +256,38 @@ def _save_state(s: dict) -> None:
     STATE_FILE.write_text(json.dumps(s, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def make_slug(title: str, digest: str) -> str:
-    return hashlib.sha1(f"{title}\n{digest}".encode()).hexdigest()[:16]
+def parse_front_matter(md_text: str) -> dict:
+    """解析 Markdown 顶部的 YAML front matter（只取 title/digest/id/slug 四个键）。
+
+    只做最小解析，不引入 yaml 依赖。"""
+    front: dict[str, str] = {}
+    if not md_text.startswith("---"):
+        return front
+    end = md_text.find("\n---", 3)
+    if end == -1:
+        return front
+    for line in md_text[3:end].splitlines():
+        if ":" not in line:
+            continue
+        k, v = line.split(":", 1)
+        k = k.strip()
+        if k in ("title", "digest", "id", "slug"):
+            front[k] = v.strip().strip('"').strip("'")
+    return front
+
+
+def make_slug(article_path: Path, front: dict) -> str:
+    """幂等键：优先 front matter 里的 id/slug，否则用 Markdown 绝对路径。
+
+    改标题、改摘要都不会改变 slug——同一篇文章反复推送只更新、不新建。
+    （旧版用 sha1(标题+摘要)，改标题会另起一篇，已废弃。）
+    """
+    fid = front.get("id") or front.get("slug")
+    if fid:
+        base = f"id:{fid}"
+    else:
+        base = f"path:{article_path.resolve()}"
+    return hashlib.sha1(base.encode()).hexdigest()[:16]
 
 
 def upsert_draft(article: dict, slug: str, verbose: bool = True) -> dict:
@@ -303,7 +336,7 @@ def probe_egress() -> str | None:
     而微信服务器在境内、流量直连，白名单必须填真实宽带出口。
     """
     probes = [
-        ("境外(ifly) https://api.ipify.org", "https://api.ipify.org"),
+        ("境外(ipify) https://api.ipify.org", "https://api.ipify.org"),
         ("境内(ipip) https://myip.ipip.net", "https://myip.ipip.net"),
     ]
     found: dict[str, str] = {}
@@ -323,13 +356,22 @@ def probe_egress() -> str | None:
 
     domestic = found.get(probes[1][0], "")
     abroad = found.get(probes[0][0], "")
-    if domestic and domestic != abroad and re.match(r"^\d", domestic):
+    ip_re = re.compile(r"^\d{1,3}(?:\.\d{1,3}){3}$")
+    domestic_ok = bool(ip_re.match(domestic or ""))
+    abroad_ok = bool(ip_re.match(abroad or ""))
+    if domestic_ok and abroad_ok and domestic != abroad:
         print(f"    ⚠️ 两者不同 → 本机可能开着代理。")
         print(f"    微信服务器在境内、流量直连，**白名单应填 {domestic}**")
         print(f"    ({abroad} 是代理节点，填它无效)")
         return domestic
-    print(f"    → 白名单应填 {domestic or abroad}")
-    return domestic or abroad
+    if domestic_ok:
+        print(f"    → 白名单应填 {domestic}")
+        return domestic
+    if abroad_ok:
+        print(f"    → 境内探测失败，暂用境外结果 {abroad}（仅供参考，建议直接看微信报错里的 IP）")
+        return abroad
+    print(f"    → 两路探测都失败了，直接调一次接口，看微信报错里的 invalid ip")
+    return None
 
 
 def cmd_doctor(args) -> int:
@@ -357,13 +399,12 @@ def cmd_doctor(args) -> int:
 
     print("\n[4] 草稿箱接口权限")
     try:
-        api_post("draft/count", token)
-        # draft/count 统计的是「已发表」数量，不是草稿数量，故不用它的返回值。
-        # 草稿真实数量用 draft/batchget 读取。
+        # draft/count 返回 {"total_count": N}，就是草稿总数
+        total = api_post("draft/count", token).get("total_count", "?")
         batch = api_post("draft/batchget", token, {"offset": 0, "count": 3})
         items = batch.get("item", []) or []
         print(f"    ✓ draft/count 与 draft/batchget 均可调用")
-        print(f"    ✓ 当前草稿箱有 {len(items)} 篇（最多显示 3）")
+        print(f"    ✓ 当前草稿箱共 {total} 篇（下方列出最近 {len(items)} 篇）")
         for it in items:
             news = (it.get("content", {}).get("news_item") or [{}])[0]
             print(f"      · {news.get('title', '(无标题)')}")
@@ -410,8 +451,10 @@ def cmd_push(args) -> int:
     token = get_token(creds)
     html = html_file.read_text(encoding="utf-8")
 
-    title = args.title or html_file.stem
-    digest = args.digest or ""
+    # 标题/摘要优先级：命令行参数 > Markdown front matter > 文件名
+    front = parse_front_matter(src.read_text(encoding="utf-8")) if src.suffix == ".md" else {}
+    title = args.title or front.get("title") or html_file.stem
+    digest = args.digest or front.get("digest", "")
     author = creds.get("author", "")
 
     if args.cover:
@@ -429,8 +472,7 @@ def cmd_push(args) -> int:
         )
 
     refs: list[str] = []
-    import re
-    for m in re.finditer(r'<img[^>]+src="([^"]+)"', html):
+    for m in re.finditer(r'''<img[^>]+src=["']([^"']+)["']''', html):
         u = m.group(1)
         if not u.startswith(("http://", "https://", "data:")):
             refs.append(u)
@@ -444,14 +486,14 @@ def cmd_push(args) -> int:
         "author": author,
         "digest": digest,
         "content": html,
-        "content_source_url": "",
+        "content_source_url": args.source_url or "",
         "thumb_media_id": thumb,
-        "need_open_comment": 0,
+        "need_open_comment": 0 if args.no_comment else 1,
         "only_fans_can_comment": 0,
         "_token": token,
     }
 
-    slug = args.slug or make_slug(title, digest)
+    slug = args.slug or make_slug(src, front)
     result = upsert_draft(article, slug)
 
     print(f"\n✅ 完成：{result['action']}  media_id={result['media_id']}")
@@ -504,12 +546,14 @@ def main() -> int:
     sub.add_parser("doctor", help="链路体检").set_defaults(func=cmd_doctor)
 
     p = sub.add_parser("push", help="推送/更新草稿")
-    p.add_argument("article", help="文章 Markdown 路径（用于推导 slug）")
+    p.add_argument("article", help="文章 Markdown 路径（幂等 slug 取自它，改标题不会另起一篇）")
     p.add_argument("--html", help="排版产物 HTML（默认 <article>.gzh.html）")
-    p.add_argument("--title")
-    p.add_argument("--digest", default="")
+    p.add_argument("--title", help="不填则读 Markdown front matter 的 title，再没有用文件名")
+    p.add_argument("--digest", default="", help="不填则读 front matter 的 digest")
     p.add_argument("--cover", help="封面图路径")
-    p.add_argument("--slug", help="幂等键，默认由标题+摘要哈希")
+    p.add_argument("--source-url", default="", help="原文链接，读者点「阅读原文」跳转（如 GitHub 地址）")
+    p.add_argument("--no-comment", action="store_true", help="关闭留言（默认打开）")
+    p.add_argument("--slug", help="幂等键，默认由文章路径（或 front matter 的 id）推导")
     p.set_defaults(func=cmd_push)
 
     p = sub.add_parser("cover", help="上传封面并设为默认")

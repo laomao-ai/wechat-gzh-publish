@@ -67,17 +67,20 @@ read -rp "作者署名（显示在文章里，可留空）: " AUTHOR
 AUTHOR="${AUTHOR:-}"
 
 # ── 写入 ───────────────────────────────────────────────────────
+# 用 python 写 JSON：署名里哪怕有双引号、反斜杠也不会写坏；
+# AppSecret 里若有 $ 或反引号也不会被 shell 展开。
 mkdir -p "$CONFIG_DIR"
-cat > "$TARGET" <<EOF
-{
-  "appid": "$APPID",
-  "appsecret": "$APPSECRET",
-  "author": "$AUTHOR",
-  "thumb_media_id": ""
-}
-EOF
-
-chmod 600 "$TARGET"
+python3 - "$TARGET" "$APPID" "$APPSECRET" "$AUTHOR" <<'PYEOF'
+import json, os, sys
+target, appid, appsecret, author = sys.argv[1:5]
+with open(target, "w", encoding="utf-8") as f:
+    json.dump(
+        {"appid": appid, "appsecret": appsecret,
+         "author": author, "thumb_media_id": ""},
+        f, ensure_ascii=False, indent=2,
+    )
+os.chmod(target, 0o600)
+PYEOF
 
 echo ""
 echo "✓ 已写入：$TARGET"
