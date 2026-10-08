@@ -31,6 +31,20 @@
 
 ---
 
+## 思路致谢（未使用其代码）
+
+以下项目给了我们思路。本仓库只借鉴做法，**没有复制其源文件、样式、模板或素材**，因此不受其协议约束；在此致谢。
+
+| 项目 | 协议 | 借鉴的思路 |
+|---|---|---|
+| 归藏 · [guizang-ppt-skill](https://github.com/op7418/guizang-ppt-skill) | MIT | 先有人工验证过的版式骨架，AI 只填内容（插图卡） |
+| 归藏 · [guizang-social-card-skill](https://github.com/op7418/guizang-social-card-skill) | AGPL-3.0 | 公众号头图 + 方图成对出；渲染后实测越界与字号 |
+| 归藏 · [guizang-product-video-skill](https://github.com/op7418/guizang-product-video-skill) | AGPL-3.0 | 首帧即成品海报；静帧拼联系表审稿 |
+
+如发现与原项目过于相似之处，欢迎提 issue，我们会改。
+
+---
+
 ## 平台接口
 
 本项目调用微信官方公开接口（[developers.weixin.qq.com](https://developers.weixin.qq.com/doc/)）：

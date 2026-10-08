@@ -269,6 +269,16 @@ python3 scripts/gen_image.py gen "提示词" --provider gemini --ratio 21:9
 
 **Gemini 注意**：是推理模型，thinking 默认开启不可关闭，按 token 计费。`image_size` 必须大写 `K`（`2K` 而非 `2k`）。
 
+### 两种出图模式
+
+| 模式 | 怎么出图 | 适合 | 需要配置 |
+|---|---|---|---|
+| **A 代码渲染**（默认） | HTML 画卡片 → Playwright 截图，配色跟随文章主题 | 标题封面、数据、对比、步骤、引语 | 无，开箱即用 |
+| **B 生图模型** | `gen_image.py` 调 Gemini / GPT / 豆包 / 第三方中转 | 氛围图、插画、场景图 | 一个 API key |
+
+可以组合：模式 B 出**不带字**的底图，标题由模式 A 叠上去，避开生图模型写中文容易糊的问题。
+模式 A 的插图卡思路致谢归藏开源的 guizang 系列 skill（只借鉴思路，代码原创，见 `THIRD_PARTY_NOTICES.md`）。
+
 ### 配图分路（重要）
 
 | 图类型 | 生成方式 | 理由 |
