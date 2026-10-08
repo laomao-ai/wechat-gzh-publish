@@ -1,6 +1,6 @@
 ---
 name: wechat-gzh-publish
-description: 公众号发布前的四步工作流——质检（标题/结构/内容）→ 排版（校验零警告）→ 配图（封面生图+裁切）→ 推送草稿箱（幂等更新）。当用户说「发公众号」「推草稿箱」「公众号排版」「帮我看看这稿行不行」「起个标题」「同步到草稿箱」，或需要把 Markdown 变成公众号文章并送进后台草稿箱时使用。覆盖内容质检、标题优化、多主题排版、微信平台合规校验、封面上传、正文图上传、幂等草稿更新、出口 IP 探测。
+description: 公众号发布前的四步工作流——质检（标题/结构/内容）→ 排版（校验零警告）→ 配图（封面生图+裁切）→ 推送草稿箱（幂等更新）。当用户说「发公众号」「推草稿箱」「公众号排版」「帮我看看这稿行不行」「起个标题」「同步到草稿箱」，或需要把 Markdown 变成公众号文章并送进后台草稿箱时使用。覆盖内容质检、标题优化、六个内置原创主题排版（青林/白皮/陶土/蓝图/便签/墨刊）、代码渲染插图卡、微信平台合规校验、封面上传、正文图上传、幂等草稿更新、出口 IP 探测。
 agent_created: true
 ---
 
@@ -32,12 +32,13 @@ git clone https://github.com/laomao-ai/wechat-gzh-publish.git
 #   Cursor     → 项目 .cursor/skills/ 或 ~/.cursor/skills/
 #   其他 Agent → 问它"你的 skills 目录在哪"，放到对应位置
 
-# 2. 排版依赖（AGPL-3.0，独立 clone，不随本仓库分发）
+# 2. 依赖：排版引擎仅标准库；裁封面要 Pillow；插图卡截图要 Playwright + 本机 Chrome
+pip install pillow
+npm i playwright            # 只在用插图卡（模式 A）时需要
+
+# 3.（可选）备选排版组件库 vendor-gzh（AGPL-3.0，独立 clone，不随本仓库分发）
 git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git \
   <skill目录>/wechat-gzh-publish/vendor-gzh
-
-# 3. Python 依赖（wechat_draft.py 仅标准库；裁封面需要 Pillow）
-pip install pillow
 ```
 
 Windows 注意：`bash xxx.sh` 请用 Git Bash 或 WSL 跑；`python3` 常常叫 `python`，命令里自行替换。
@@ -85,8 +86,8 @@ python3 scripts/wechat_draft.py doctor
 
 ```
 ① 质检 → 标题 + 结构 + 内容（references/quality-check.md）→ 用户确认
-② 排版 → 选主题 + 装配 → 校验到 0 WARN
-③ 配图 → 封面生图 + fit_cover 裁成 900×383
+② 排版 → 按文章类型选系列（theme-lab 六选一）→ 渲染 → 校验到 0 WARN
+③ 配图 → 插图卡代码渲染（头图 2.35:1 + 方图 1:1），或生图 + fit_cover
 ④ 推送 → 直连草稿箱（同 slug 自动 update）
 ⑤ 人工点「发表」
 ```
@@ -145,7 +146,45 @@ python3 scripts/wechat_draft.py doctor
 
 ## 步骤 2：排版（选主题 + 校验到 0 WARN）
 
-### 先选主题
+### 默认：内置主题实验室 `theme-lab/`（推荐，无需额外 clone）
+
+六个原创系列，每个 3 个主色。**按文章类型选，不按颜色选**：
+
+| 系列 | 用途 | 适合 | 主色（第一个为默认） |
+|---|---|---|---|
+| `forest` 青林 | 经典通用 | 综合长文、产品发布、开源介绍、经验复盘 | leaf 叶绿 / pine 松墨 / lake 湖青 |
+| `airy` 白皮 | 头部IP | AI 工具实测、产品速览、图文简报 | cobalt 钴蓝 / violet 电紫 / graphite 石墨 |
+| `clay` 陶土 | 故事随笔 | 品牌故事、个人随笔、观点长文 | terracotta / pine / indigo |
+| `grid` 蓝图 | 实操教程 | 教程、评测、操作指南 | cobalt / signal / safety |
+| `journal` 便签 | 知识手帐 | 学习笔记、清单、方法论 | cherry / ink / grass |
+| `masthead` 墨刊 | 头条热点 | 行业评论、热点解读、周报 | signal / volt / mint |
+
+```bash
+# 渲染（产物 + 390px 预览页放在 --out 目录；图片相对路径以 --out 为基准）
+python3 theme-lab/engine/render.py article.md forest-leaf --out out/
+# 兼容检查，须 ERROR=0 WARN=0
+python3 theme-lab/engine/check.py out/article.forest-leaf.gzh.html
+# 推送时用 --html 指定渲染产物
+python3 scripts/wechat_draft.py push article.md --html out/article.forest-leaf.gzh.html --cover cover.jpg
+```
+
+Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `theme-lab/index.html`）：
+
+| 写法 | 效果 |
+|---|---|
+| `## 01　标题 ｜ KICKER` | 章节头 + 英文眉标 |
+| `### CASE 01 · 标题` / `### STEP 01 · 标题` | 带标签小标题 |
+| `![图注](src "hero\|bare\|frame")` | 图片样式；第一个 `##` 前的图自动当题图 |
+| ```` ```prompt 标题 ```` | 提示词框（自动编号 PROMPT 01） |
+| `> [!TIP]` `[!NOTE]` `[!WARN]` `[!KEY]` | 提示卡 |
+| `> [!ASK] 问题` | 结尾互动 |
+| `:::gallery swipe 说明 … :::` | 多图（row / stack / swipe / scroll / frame） |
+| front matter `cover: none` | 有题图时不再出文字封面卡 |
+
+### 备选：外部排版组件库 vendor-gzh
+
+
+### 先选主题（vendor-gzh 路线）
 
 读 `config/brand_voice.json`。
 
@@ -273,8 +312,17 @@ python3 scripts/gen_image.py gen "提示词" --provider gemini --ratio 21:9
 
 | 模式 | 怎么出图 | 适合 | 需要配置 |
 |---|---|---|---|
-| **A 代码渲染**（默认） | HTML 画卡片 → Playwright 截图，配色跟随文章主题 | 标题封面、数据、对比、步骤、引语 | 无，开箱即用 |
+| **A 代码渲染**（默认，`theme-lab/engine/cards.py`） | HTML 画卡片 → Playwright 截图，配色跟随文章主题 | 标题封面、数据、对比、步骤、引语 | 无，开箱即用 |
 | **B 生图模型** | `gen_image.py` 调 Gemini / GPT / 豆包 / 第三方中转 | 氛围图、插画、场景图 | 一个 API key |
+
+```bash
+# 模式 A：写 spec.json（theme / ratio: 16:9 | 3:4 | 2.35:1 | 1:1 / cards[]），渲染后截图
+python3 theme-lab/engine/cards.py img/spec.json
+node theme-lab/engine/shoot_cards.js img/cards     # 截图前实测：越界报错退出，字太小给提醒
+```
+
+骨架：`cover` 标题封面 / `stat` 数据 / `compare` 对比表 / `quote` 引语 / `steps` 步骤。配色读所选主题，插图与正文同一套视觉。
+封面建议同时出 2.35:1 头图和 1:1 方图（转发卡片、朋友圈用）。
 
 可以组合：模式 B 出**不带字**的底图，标题由模式 A 叠上去，避开生图模型写中文容易糊的问题。
 模式 A 的插图卡思路致谢归藏开源的 guizang 系列 skill（只借鉴思路，代码原创，见 `THIRD_PARTY_NOTICES.md`）。
@@ -383,6 +431,9 @@ api_post("draft/update", token, {"media_id": mid,
 
 ### 已实现
 
+- **六个内置原创主题** —— `theme-lab/`，18 个配色，同一套组件库；网页预览 `theme-lab/index.html`
+- **插图卡** —— `theme-lab/engine/cards.py`，五种骨架、四种比例，截图前自动校验
+
 - **质检** —— 见 `references/quality-check.md`
   查标题（三条红线）、结构（主张/开头/推导）、内容（承诺兑现/AI 味/段落）。
   输出问题清单和改法，**用户确认后再进排版**。
@@ -410,3 +461,4 @@ api_post("draft/update", token, {"media_id": mid,
 - `docs/CONFIG.md` — ★ 配置指南（微信凭证 / IP 白名单 / 生图 Provider / 主题）
 - `docs/BEST-PRACTICE.md` — 踩坑记录与实战验证（IP 探测、幂等设计、微信接口细节）
 - `config/brand_voice.json` — 主题注册表（可自由增删，含新增指南）
+- `theme-lab/` — 内置主题与插图卡；`theme-lab/CREDITS.md` 为思路来源与致谢

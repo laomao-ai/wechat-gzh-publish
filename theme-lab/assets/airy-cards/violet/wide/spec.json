@@ -1,0 +1,16 @@
+{"theme": "airy-violet", "ratio": "16:9",
+ "defaults": {"kicker": "WHITEPAPER · ILLUSTRATION CARDS", "source": "laomao-ai/wechat-gzh-publish", "author": "艾元老猫"},
+ "cards": [
+  {"id": "cover", "layout": "cover", "tag": "HTML → JPG", "title": "一张配图", "highlight": "用 HTML 画出来", "sub": "写几行内容，套进骨架，截成图片。字是清楚的，数字是准的。"},
+  {"id": "stat", "layout": "stat", "title": "一次出图的成本", "stats": [
+    {"value": "5", "label": "种骨架", "note": "封面 / 数据 / 对比 / 金句 / 步骤"},
+    {"value": "2", "label": "种比例", "note": "16:9 正文 · 3:4 贴图"},
+    {"value": "<3s", "label": "单张耗时", "note": "本地截图，不排队"},
+    {"value": "0", "label": "错字", "note": "文字是排出来的，不是画出来的"}]},
+  {"id": "compare", "layout": "compare", "title": "三种配图方式", "highlight_col": 3,
+   "head": ["", "截图", "AI 生图", "HTML 卡片"],
+   "rows": [["文字准确", "准", "常出错字", "准"], ["风格统一", "看来源", "难控制", "读系列配色"],
+            ["改一个数字", "重截", "重画", "改一行"], ["适合", "实操记录", "氛围插画", "数据 / 结论 / 步骤"]]},
+  {"id": "quote", "layout": "quote", "text": "能用一张卡说清的，\n就别让读者读三段。", "cite": "白皮 · 写作原则"},
+  {"id": "steps", "layout": "steps", "title": "从内容到配图", "items": [["写 spec", "几行 JSON：标题、数字、对比"], ["选骨架", "封面、数据、对比、金句、步骤"], ["截图上传", "生成 JPG，正文直接引用"]]}
+ ]}

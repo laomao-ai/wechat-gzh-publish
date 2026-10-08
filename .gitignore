@@ -44,3 +44,12 @@ docs/sample-intel*
 !config/brand_voice.json
 !config/*.example.json
 !docs/images/*.svg
+
+# ===== theme-lab：图片是成品素材，要入库 =====
+!theme-lab/**/*.jpg
+!theme-lab/**/*.png
+!docs/images/hero.jpg
+theme-lab/**/cards/*.html
+theme-lab/**/cards/_manifest.json
+theme-lab/drafts/
+theme-lab/out/

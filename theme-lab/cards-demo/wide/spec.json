@@ -1,0 +1,17 @@
+{"theme": "airy-cobalt", "ratio": "16:9",
+ "defaults": {"kicker": "WECHAT GZH · THEME LAB", "source": "laomao-ai/wechat-gzh-publish", "author": "艾元老猫"},
+ "cards": [
+  {"id": "cover", "layout": "cover", "tag": "SIX ORIGINAL THEMES", "title": "六个原创排版主题", "highlight": "各自适合写什么", "sub": "按文章类型选主题，不按颜色选。每个系列有自己的字号、行距和边距。"},
+  {"id": "stat", "layout": "stat", "title": "一套引擎，六种节奏", "stats": [
+    {"value": "6", "label": "系列", "note": "每个三种配色"},
+    {"value": "24", "label": "组件", "note": "每篇只用需要的"},
+    {"value": "12–24", "label": "两侧边距 px", "note": "墨刊最紧，白皮最松"},
+    {"value": "0", "label": "兼容错误", "note": "54 个片段全部通过"}]},
+  {"id": "compare", "layout": "compare", "title": "每个系列的排版参数", "highlight_col": 2,
+   "head": ["系列", "适合", "字号 / 行高", "段距 / 边距"],
+   "rows": [["青林", "经典通用", "14 / 1.9", "16 / 20"], ["白皮", "头部IP", "15 / 2.0", "28 / 24"],
+            ["陶土", "故事随笔", "16 / 1.9", "26 / 22"], ["蓝图", "实操教程", "15 / 1.75", "24 / 16"],
+            ["便签", "知识手帐", "15 / 2.0", "26 / 20"], ["墨刊", "头条热点", "15 / 1.75", "20 / 12"]]},
+  {"id": "quote", "layout": "quote", "text": "好的排版，\n应该退到文字后面。", "cite": "陶土 · 样例"},
+  {"id": "steps", "layout": "steps", "title": "从 Markdown 到草稿箱", "items": [["写稿", "一份 Markdown，不用管格式"], ["选系列", "按文章类型挑一个"], ["推送", "直连草稿箱，改稿是更新"]]}
+ ]}

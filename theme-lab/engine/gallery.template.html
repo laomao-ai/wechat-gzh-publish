@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>微信公众号主题实验室</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#F3F1EC;color:#1C1B19;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1240px;margin:auto;padding:40px 24px 64px}
+.eyebrow{font:700 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.2em;color:#8B867C}
+h1{font-size:40px;letter-spacing:-.01em;margin:12px 0 10px}
+.intro{max-width:760px;color:#5E5A52;font-size:15px;line-height:1.8;margin:0}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:30px 0 22px}
+.card{text-align:left;border:1px solid #DDD8CE;background:#fff;border-radius:14px;padding:16px;cursor:pointer;transition:.15s;font:inherit;color:inherit}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(40,30,10,.08)}
+.card.on{border-color:#1C1B19;box-shadow:0 0 0 1px #1C1B19}
+.card span{display:block}.card .s{font-size:11px;color:#8B867C;letter-spacing:.08em}.card .n{font-size:18px;font-weight:800;margin:6px 0 4px}
+.card .f{font-size:12px;color:#6B665D;line-height:1.6}.card .dots{margin-top:10px;display:flex;gap:5px}.dots i{display:block;width:12px;height:12px;border-radius:50%}
+.stage{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start}
+.seg{display:inline-flex;background:#E7E3DA;border-radius:999px;padding:3px;margin:0 0 12px}
+.seg button{border:0;background:none;padding:7px 16px;border-radius:999px;font-family:inherit;font-size:13px;font-weight:600;color:#5E5A52;cursor:pointer}
+.seg button.on{background:#1C1B19;color:#fff}
+.phone{background:#1C1B19;border-radius:34px;padding:12px;box-shadow:0 24px 60px rgba(30,20,0,.18)}
+.phone iframe{display:block;width:100%;height:760px;border:0;border-radius:24px;background:#fff}
+.info h2{font-size:28px;margin:0 0 4px;letter-spacing:-.03em}.info .meta{color:#8B867C;font-size:13px;margin-bottom:18px}
+.block{background:#fff;border:1px solid #E3DED4;border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.block b{display:block;font-size:12px;color:#8B867C;letter-spacing:.08em;margin-bottom:8px;font-weight:700}
+.block p{margin:0;font-size:14px;line-height:1.8;color:#3B3832}
+.sw{display:flex;gap:8px;flex-wrap:wrap}.sw button{display:flex;align-items:center;gap:8px;border:1px solid #DDD8CE;background:#fff;border-radius:999px;padding:6px 12px 6px 6px;font-family:inherit;font-size:13px;cursor:pointer}
+.sw button i{width:20px;height:20px;border-radius:50%}.sw button.on{border-color:#1C1B19;box-shadow:0 0 0 1px #1C1B19}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips span{font-size:12px;padding:4px 10px;border-radius:999px;background:#F3F1EC;color:#4A463F}
+.acts{display:flex;gap:8px;flex-wrap:wrap}.acts a{font-size:13px;text-decoration:none;color:#1C1B19;border:1px solid #1C1B19;border-radius:8px;padding:8px 12px}
+.acts a.pri{background:#1C1B19;color:#fff}
+.acts a,.acts button{cursor:pointer}.acts button.pri{font-family:inherit;font-size:14px;font-weight:700;border:0;border-radius:10px;padding:11px 18px;background:#1C1B19;color:#fff}.acts button.pri.ok{background:#12945F}
+.acts .alt{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;width:100%}.acts .alt a{border:0;padding:0;font-size:13px;color:#5E5A52;text-decoration:underline;text-underline-offset:3px}
+.spec{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.spec div{background:#F7F5F0;border-radius:10px;padding:8px 10px}.spec small{display:block;font-size:11px;color:#8B867C}.spec strong{font-size:15px}
+h3.sec{font-size:20px;margin:44px 0 6px;letter-spacing:-.02em}.sub{color:#8B867C;font-size:13px;margin:0 0 14px}
+table.lib{width:100%;border-collapse:collapse;background:#fff;border:1px solid #E3DED4;border-radius:14px;overflow:hidden;font-size:13px}
+.lib th,.lib td{text-align:left;padding:10px 14px;border-bottom:1px solid #EFEBE3;vertical-align:top}
+.lib th{background:#FAF8F4;color:#8B867C;font-weight:700;font-size:12px}.lib code{font:12px ui-monospace,Menlo,monospace;color:#2F5D4A}
+.hist{display:flex;flex-wrap:wrap;gap:10px}.hist a{display:block;min-width:220px;padding:12px 14px;background:#fff;border:1px solid #E3DED4;border-radius:12px;text-decoration:none;color:inherit}
+.hist a b{font-size:14px}.hist a span{display:block;font-size:12px;color:#8B867C;margin-top:4px;line-height:1.6}
+.foot{margin-top:36px;padding-top:18px;border-top:1px solid #DDD8CE;font-size:12px;color:#8B867C;line-height:1.8}
+@media(max-width:1100px){.spec{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:960px){.cards{grid-template-columns:repeat(2,1fr)}.stage{grid-template-columns:1fr}.phone{max-width:400px;margin:auto}}
+@media(max-width:520px){h1{font-size:30px}.cards{grid-template-columns:1fr}.phone iframe{height:620px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">WECHAT THEME LAB · ORIGINAL SERIES</div>
+  <h1>微信公众号主题实验室</h1>
+  <p class="intro">六个系列，对应六种阅读任务。所有主题共用一套组件库，同一篇样例文章在不同主题里排一遍，差异一眼可见；切到「组件展厅」能看到这套主题的全部组件。挑一套，换个主色，点「复制到公众号」就能粘进编辑器。</p>
+  <div class="cards" id="cards"></div>
+  <div class="stage">
+    <div>
+      <div class="seg" id="seg"></div>
+      <div class="phone"><iframe id="frame" title="主题预览"></iframe></div>
+    </div>
+    <div class="info">
+      <h2 id="tName"></h2><div class="meta" id="tMeta"></div>
+      <div class="block"><b>主色</b><div class="sw" id="sw"></div></div>
+      <div class="block"><b>适合写什么</b><p id="tFit"></p></div>
+      <div class="block"><b>设计原则</b><p id="tPrin"></p></div>
+      <div class="block"><b>排版参数</b><div class="spec" id="spec"></div></div>
+      <div class="block"><b id="usedTitle">这篇用到的组件</b><div class="chips" id="chips"></div>
+        <p style="margin-top:10px;font-size:12px;color:#8B867C" id="usedNote"></p></div>
+      <div class="block"><b>操作</b><div class="acts">
+        <button class="pri" id="aCopy" type="button">复制到公众号</button>
+        <div class="alt"><a id="aOpen" target="_blank">打开单页</a><a id="aFrag" download>下载正文 HTML</a><a id="aMd" download>下载 Markdown</a></div></div>
+        <p style="margin-top:10px;font-size:12px;color:#8B867C" id="copyNote">复制后在公众号编辑器里直接粘贴。</p></div>
+    </div>
+  </div>
+  <h3 class="sec">组件库</h3>
+  <p class="sub">每个组件对应一种 Markdown 写法。新组件加进库里，所有主题自动获得默认样式，旧主题不会因为升级而缺功能。</p>
+  <table class="lib"><thead><tr><th>组件</th><th>Markdown 写法</th><th>什么时候用</th></tr></thead><tbody id="lib"></tbody></table>
+  <div id="histWrap"><h3 class="sec">历史版本</h3>
+  <p class="sub">每次大改前都会冻结一份完整预览，旧版样式随时能打开对比、取回复用。</p>
+  <div class="hist" id="hist"></div></div>
+  <div class="foot">
+    全部主题为原创，以 MIT 协议开源；设计上参考了公开的通用设计原则，没有复用任何品牌的配色、字体或标识。思路来源与致谢见 <a href="https://github.com/laomao-ai/wechat-gzh-publish/blob/main/theme-lab/CREDITS.md" style="color:inherit">CREDITS.md</a>。<br>
+    预览为浏览器渲染，产物已通过公众号兼容检查；正式发表前，建议在公众号后台再预览一次。
+  </div>
+</div>
+<script>
+var D=/*DATA*/;var CATALOG=D.catalog;
+var cur={t:0,v:0,d:0},curFrag='';
+function spec(t){var L=['字号','行高','字距','段后','两侧'];return String(t).replace(/^正文\s*/,'').split('·').map(function(x,i){
+  x=x.trim();return '<div><small>'+(L[i]||'')+'</small><strong>'+esc(x.replace(/^(行高|字距|段后|两侧)\s*/,''))+'</strong></div>'}).join('')}
+function resetCopy(){var b=document.getElementById('aCopy');b.textContent='复制到公众号';b.classList.remove('ok')}
+function copyNow(){var b=document.getElementById('aCopy'),n=document.getElementById('copyNote');
+  fetch(curFrag).then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(html){
+    if(navigator.clipboard&&window.ClipboardItem){return navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([html.replace(/<[^>]+>/g,'')],{type:'text/plain'})})])}
+    var d=document.createElement('div');d.contentEditable='true';d.style.cssText='position:fixed;left:-9999px';d.innerHTML=html;document.body.appendChild(d);
+    var r=document.createRange();r.selectNodeContents(d);var s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();d.remove()})
+  .then(function(){b.textContent='已复制，去编辑器粘贴';b.classList.add('ok')})
+  .catch(function(){n.textContent='这里复制失败（本地直接打开文件时浏览器会拦截），请点「打开单页」，用页内的复制按钮。'})}
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+function draw(){
+  var T=CATALOG[cur.t],V=T.variants[cur.v],Doc=D.docs[cur.d],file=V.files[Doc.key],isS=Doc.key==='series',mdf=isS?T.sample:Doc.md,used=isS?T.used:Doc.used;
+  document.querySelectorAll('.card').forEach(function(c,i){c.classList.toggle('on',i===cur.t)});
+  document.querySelectorAll('#seg button').forEach(function(b,i){b.classList.toggle('on',i===cur.d)});
+  document.getElementById('frame').src=file;
+  document.getElementById('tName').textContent=T.name;
+  document.getElementById('tMeta').textContent=T.series+' · '+V.label+' · v'+T.version;
+  document.getElementById('tFit').textContent=T.fit;
+  document.getElementById('tPrin').textContent=T.principle;
+  document.getElementById('spec').innerHTML=spec(T.typeset);
+  curFrag=file.replace('.html','.fragment.html');resetCopy();
+  document.getElementById('aOpen').href=file;
+  var frag=file.replace('.html','.fragment.html');var a=document.getElementById('aFrag');a.href=frag;a.download=frag.split('/').pop();
+  var m=document.getElementById('aMd');m.href=mdf;m.download=mdf.split('/').pop();
+  var sw=document.getElementById('sw');sw.innerHTML='';
+  T.variants.forEach(function(x,i){var b=document.createElement('button');b.className=i===cur.v?'on':'';
+    b.innerHTML='<i style="background:'+x.accent+'"></i>'+esc(x.label);b.onclick=function(){cur.v=i;draw()};sw.appendChild(b)});
+  document.getElementById('usedTitle').textContent=Doc.key==='showcase'?'展厅里的组件':'这篇用到的组件';
+  document.getElementById('usedNote').textContent=isS?('本系列样例《'+T.sample_title+'》：题材按这个系列最擅长的来选。'):Doc.key==='article'?'六个系列排同一篇主题介绍，方便横向比较。':'每个组件出现一次，方便挑选。';
+  document.getElementById('chips').innerHTML=used.map(function(k){return '<span>'+esc(k)+'</span>'}).join('');
+  history.replaceState(null,'','#'+T.key+'-'+V.key+(cur.d?'-'+Doc.key:''));
+}
+document.getElementById('aCopy').onclick=copyNow;
+var cards=document.getElementById('cards');
+CATALOG.forEach(function(T,i){var c=document.createElement('button');c.className='card';
+  c.type='button';c.innerHTML='<span class="s">'+esc(T.series)+'</span><span class="n">'+esc(T.name)+'</span><span class="f">'+esc(T.fit)+'</span><span class="dots">'+
+  T.variants.map(function(v){return '<i title="'+esc(v.label)+'" style="background:'+v.accent+'"></i>'}).join('')+'</span>';
+  c.onclick=function(){cur.t=i;cur.v=0;draw()};cards.appendChild(c)});
+var seg=document.getElementById('seg');
+D.docs.forEach(function(d,i){var b=document.createElement('button');b.textContent=d.label;b.onclick=function(){cur.d=i;draw()};seg.appendChild(b)});
+document.getElementById('lib').innerHTML=D.components.map(function(c){
+  return '<tr><td><b>'+esc(c.name)+'</b></td><td><code>'+esc(c.syntax)+'</code></td><td>'+esc(c.use)+'</td></tr>'}).join('');
+var hist=document.getElementById('hist');
+hist.innerHTML=D.history.length?D.history.slice().reverse().map(function(h){
+  return '<a href="'+h.path+'" target="_blank"><b>'+esc(h.version)+'</b><span>'+esc(h.date)+' · '+esc(h.note)+'</span></a>'}).join('')
+  :'';if(!D.history.length)document.getElementById('histWrap').style.display='none';
+var h=location.hash.slice(1).split('-');
+CATALOG.forEach(function(T,i){if(T.key===h[0]){cur.t=i;T.variants.forEach(function(v,j){if(v.key===h[1])cur.v=j})}});
+D.docs.forEach(function(d,i){if(d.key===h[2])cur.d=i});
+draw();
+</script>
+</body>
+</html>
