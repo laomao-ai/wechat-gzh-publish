@@ -451,7 +451,7 @@ class Theme:
         return ('<section style="margin:6px 0 24px;">'
                 + ''.join(self.card(t, d, n) for n, (t, d) in enumerate(b['items'], 1)) + '</section>')
 
-    # Image rules carried over from the first published article (v0.6):
+    # Image rules proven on real WeChat articles:
     # - corners are clipped by a wrapper (radius + overflow:hidden + line-height:0), not by <img>
     #   alone: the editor may rewrite <img> styles, and line-height:0 kills the gap under images
     # - screenshots get a 1px hairline so white UI does not melt into a white page

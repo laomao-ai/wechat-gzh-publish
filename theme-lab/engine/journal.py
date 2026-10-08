@@ -1,4 +1,4 @@
-"""便签 · 知识手帐. Original theme (replaces 彩签手册 v0.1, kept as LEGACY).
+"""便签 · 知识手帐. Original theme.
 
 Design intent: a paper notebook page. Dot-grid paper, washi-tape strips,
 a rubber stamp, sticky notes, polaroid cards, a to-do list TOC, kaiti

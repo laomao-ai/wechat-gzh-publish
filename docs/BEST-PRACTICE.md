@@ -49,11 +49,10 @@
 
 ## 三、排版层：用组件库装配
 
-**为什么不自研**：主题组件库（6 套主题 × 数十组件）+ 微信平台红线的确定性校验，已经被开源方案做完了。AGPL-3.0允许使用与修改，衍生品需开源——内部自用无碍。
+**默认用内置的 `theme-lab/`**：六个原创系列、一套组件库、公众号兼容检查，随仓库分发，不用额外安装。
 
-获取：`git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git vendor-gzh`
-
-> 它提供 6 套现成的主题组件库和两个校验脚本，是整个排版层的基础。
+**备选 vendor-gzh**：甲木开源的 gzh-design-skill（AGPL-3.0），独立 clone、不随本仓库分发：
+`git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git vendor-gzh`
 
 ### 微信平台的硬性限制（排版产物必须遵守）
 

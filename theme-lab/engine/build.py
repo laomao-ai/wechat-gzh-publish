@@ -57,7 +57,7 @@ def used_components(blocks):
 
 
 def build():
-    # themes/ is generated and overwritten in place; older renders live in archive/<version>/.
+    # themes/ is generated and overwritten in place.
     # Files of retired themes are reported, not deleted automatically.
     def load(fname):
         text = (ROOT / fname).read_text(encoding='utf-8')
@@ -114,7 +114,7 @@ def build():
     live |= {n.replace('.html', '.fragment.html') for n in live}
     stale = sorted(p.name for p in OUT.glob('*.html') if p.name not in live)
     if stale:
-        print('stale files in themes/ (safe to remove, snapshot in archive/):', stale)
+        print('stale files in themes/ (safe to remove):', stale)
     print('themes:', len(catalog), 'variants:', sum(len(c['variants']) for c in catalog),
           'docs:', [d['key'] for d in docs])
 

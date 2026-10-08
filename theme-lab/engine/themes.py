@@ -2,7 +2,7 @@
 
 Components and tokens live in components.py; each theme here overrides only
 what gives it character. Retired themes stay in this file (LEGACY) so their
-look can be rebuilt or reused later; archive/ keeps their rendered snapshots.
+look can be rebuilt or reused later.
 """
 from components import Theme, esc, leaf, blank, mix, SANS, SERIF, KAI, MONO
 
@@ -356,7 +356,7 @@ class Masthead(Theme):
 
 
 # ---------------------------------------------------------------------------
-# Per-theme overrides for components added in v0.2 (keeps each class's v0.1
+# Per-theme overrides for newer components (keeps each class's original
 # signature intact while giving new components that theme's character).
 # ---------------------------------------------------------------------------
 
@@ -484,12 +484,12 @@ from airy import Airy  # noqa: E402
 
 # Active catalog shown in the gallery, in recommended order.
 THEMES = [Forest, Airy, Clay, Grid, Journal, Masthead]
-# Retired but kept: can be re-enabled or mined for parts. Snapshot in archive/v0.1.
+# Retired but kept: can be re-enabled or mined for parts.
 LEGACY = {'tint': Tint}
 
 
 # ---------------------------------------------------------------------------
-# Typesetting per series (v0.4). Baseline is the common WeChat recipe
+# Typesetting per series. Baseline is the common WeChat recipe
 # 15px / 1.75 / 1px / 24px after / 16px inset; each series bends it on purpose.
 #            size  lh    ls   gap  pad  cover_bleed  body_color
 # ---------------------------------------------------------------------------
