@@ -23,7 +23,7 @@
 | **便签** | 知识手帐 | 学习笔记、清单、方法论 | 点阵纸、胶带、印章负责气氛，正文依旧好读 |
 | **墨刊** | 头条热点 | 行业评论、热点解读、周报 | 黑白九成，一种信号色只做刊头与引语 |
 
-打开 [`theme-lab/index.html`](theme-lab/index.html)（或上面的在线页）可以切换系列、主色和三种预览，点「复制到公众号」直接粘进编辑器。
+打开[在线主题实验室](https://laomao-ai.github.io/wechat-gzh-publish/theme-lab/)可以切换系列、主色和三种预览，点「复制到公众号」直接粘进编辑器。本地打开 `theme-lab/index.html` 效果一样。
 
 <p align="center"><img src="theme-lab/assets/gallery.jpg" width="720" alt="主题实验室"></p>
 
@@ -33,17 +33,17 @@
 # 1. 拉取（放到你 Agent 的 skills 目录，见 SKILL.md）
 git clone https://github.com/laomao-ai/wechat-gzh-publish.git && cd wechat-gzh-publish
 
-# 2. 微信凭证（AppSecret 交互式输入，不回显）+ IP 白名单体检
-bash scripts/init_credentials.sh
-python3 scripts/wechat_draft.py doctor
+# 2. 微信凭证（AppSecret 不回显）+ 体检，体检会告诉你 IP 白名单填哪个
+python scripts/init_credentials.py
+python scripts/wechat_draft.py doctor
 
 # 3. 排版 → 检查 → 推送
-python3 theme-lab/engine/render.py article.md forest-leaf --out out/
-python3 theme-lab/engine/check.py out/article.forest-leaf.gzh.html      # 须 ERROR=0 WARN=0
-python3 scripts/wechat_draft.py push article.md --html out/article.forest-leaf.gzh.html --cover cover.jpg
+python theme-lab/engine/render.py article.md forest-leaf --out out/
+python theme-lab/engine/check.py out/article.forest-leaf.gzh.html      # 须 ERROR=0 WARN=0
+python scripts/wechat_draft.py push article.md --html out/article.forest-leaf.gzh.html --cover cover.jpg
 ```
 
-排版引擎和推送脚本只用 Python 标准库。裁封面需要 `pip install pillow`；插图卡截图需要 `npm i playwright`。完整配置见 [docs/CONFIG.md](docs/CONFIG.md)。
+排版引擎和推送脚本只用 Python 标准库。裁封面需要 `pip install pillow`；插图卡截图需要 `npm i playwright`，本机没有 Chrome 时再跑 `npx playwright install chromium`。AppID 在[公众号后台](https://mp.weixin.qq.com) 设置与开发 → 账号设置 → 注册信息；AppSecret 和 IP 白名单在[微信开发者平台](https://developers.weixin.qq.com/console/index?tab1=business&tab2=dataStore)（我的业务与服务 → 公众号 → 绑定 AppID）。体检缺凭证时会打印完整步骤。完整配置见 [docs/CONFIG.md](docs/CONFIG.md)。
 
 在 Agent 里更简单：「用青林排这篇，推到草稿箱」。
 

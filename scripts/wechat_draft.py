@@ -11,10 +11,10 @@
 4. IP 白名单由调用方环境保证，本脚本不做代理
 
 用法：
-  python3 wechat_draft.py doctor                    # 体检：配置/网络/权限
-  python3 wechat_draft.py push article.md --title "..." --cover cover.jpg
-  python3 wechat_draft.py list                     # 列出草稿箱最近 10 条
-  python3 wechat_draft.py rm <media_id>
+  python wechat_draft.py doctor                    # 体检：配置/网络/权限
+  python wechat_draft.py push article.md --title "..." --cover cover.jpg
+  python wechat_draft.py list                     # 列出草稿箱最近 10 条
+  python wechat_draft.py rm <media_id>
 """
 
 from __future__ import annotations
@@ -34,6 +34,20 @@ import urllib.request
 from pathlib import Path
 
 BASE = "https://api.weixin.qq.com/cgi-bin"
+PLATFORM_URL = "https://developers.weixin.qq.com/console/index?tab1=business&tab2=dataStore"
+# 首次配置三步，doctor / 缺凭证时原样打印给用户
+SETUP_GUIDE = """\
+  ① AppID：公众号后台 https://mp.weixin.qq.com
+       设置与开发 → 账号设置 → 注册信息，页面底部 wx 开头那串
+  ② AppSecret：微信开发者平台（管理员微信扫码登录）
+       https://developers.weixin.qq.com/console/index?tab1=business&tab2=dataStore
+       顶部「我的业务与服务」→ 下拉选「公众号」→ 输入 ① 的 AppID 绑定
+       → 进入公众号基础信息 → 开发密钥，点「重置」，只显示一次，当场存好
+  ③ IP 白名单：同一页「API IP 白名单」，填体检 [1] 给出的 IP
+       也可以在公众号后台 设置与开发 → 安全中心 → IP 白名单 配置
+       （需先设置过开发者密码 AppSecret 才能填白名单）
+"""
+WHITELIST_WHERE = "开发者平台 公众号基础信息 → API IP 白名单（或公众号后台 设置与开发 → 安全中心 → IP 白名单）"
 
 # 配置目录查找：优先本项目 config/，其次向上查找（skill 独立安装场景），
 # 再次回退到~/.config/wechat-gzh-publish/
@@ -78,7 +92,10 @@ class WeChatError(RuntimeError):
 ERROR_HINTS = {
     40001: "AppSecret 错误，或用了 reset 前的旧值",
     40013: "AppID 不正确",
-    40164: "当前出口 IP 不在白名单。看体检第 [1] 步的出口 IP 探测结果，或看报错里的 invalid ip",
+    40164: "出口 IP 不在白名单。把报错里 invalid ip 后面那串填到：开发者平台 公众号基础信息 → API IP 白名单，或公众号后台 设置与开发 → 安全中心 → IP 白名单",
+    61004: "出口 IP 不在白名单，同 40164",
+    40125: "AppSecret 无效。去开发者平台 公众号基础信息 → 开发密钥 重置后重新配置",
+    40243: "AppSecret 已被冻结。去开发者平台 公众号基础信息 → 开发密钥 解冻（约 10 分钟生效）",
     48001: "该账号无此接口权限。个人主体/未认证账号的 freepublish 已被回收（草稿箱接口仍可用）",
     41001: "缺少 access_token",
     45009: "接口调用超限，稍后重试",
@@ -91,8 +108,9 @@ def load_creds() -> dict:
     if not CREDS_FILE.exists():
         hint = (
             f"缺少配置文件: {CREDS_FILE}\n"
-            f"先跑配置脚本（AppSecret 输入不回显，属于正常）：\n"
-            f"    bash scripts/init_credentials.sh\n"
+            f"首次配置三步：\n{SETUP_GUIDE}"
+            f"拿到后在终端跑（AppSecret 输入不回显，属于正常）：\n"
+            f"    python scripts/init_credentials.py\n"
             f"配置指南见 docs/CONFIG.md"
         )
         raise SystemExit(hint)
@@ -384,6 +402,9 @@ def cmd_doctor(args) -> int:
     print("\n[2] 配置文件")
     if not CREDS_FILE.exists():
         print(f"    ✗ 缺少 {CREDS_FILE}")
+        print("    首次配置三步：")
+        print(SETUP_GUIDE, end="")
+        print("    拿到后在终端跑：python scripts/init_credentials.py")
         return 1
     creds = load_creds()
     print(f"    ✓ AppID      = {creds['appid']}")
@@ -395,6 +416,12 @@ def cmd_doctor(args) -> int:
         print(f"    ✓ 获取成功 {token[:12]}...({len(token)} 字符)")
     except WeChatError as e:
         print(f"    ✗ {e}")
+        if e.code in (40164, 61004):
+            # 微信报错里的 invalid ip 就是它真实看到的出口，比任何查询站都准
+            m = re.search(r"invalid ip ([0-9.]+)", e.msg)
+            ip = m.group(1) if m else "上面 [1] 的 IP"
+            print(f"    → 白名单填：{ip}")
+            print(f"    位置：{WHITELIST_WHERE}，填完管理员扫码确认")
         return 1
 
     print("\n[4] 草稿箱接口权限")
@@ -444,7 +471,7 @@ def cmd_push(args) -> int:
     if not html_file.exists():
         raise SystemExit(
             f"找不到排版产物: {html_file}\n"
-            f"请先用 gzh-design 排版生成 HTML，或用 --html 显式指定"
+            f"请先用 theme-lab/engine/render.py 排版生成 HTML，或用 --html 显式指定"
         )
 
     creds = load_creds()
@@ -468,7 +495,8 @@ def cmd_push(args) -> int:
         raise SystemExit(
             "缺少封面。二选一：\n"
             "  --cover cover.jpg          指定本次封面\n"
-            "  在配置文件里填 thumb_media_id 作为默认封面"
+            "  在配置文件里填 thumb_media_id 作为默认封面\n"
+            "没有现成封面？用插图卡出一张：theme-lab/engine/cards.py（见 SKILL.md「插图卡」）"
         )
 
     refs: list[str] = []

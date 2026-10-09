@@ -1,5 +1,12 @@
 # 更新记录
 
+## v0.2.1 · 2026-10-09 · 首次配置更顺
+
+- 凭证配置改为 `python scripts/init_credentials.py`，Windows / macOS / Linux 都能跑，不再需要 bash。
+- 补全拿凭证的路径：AppID 在公众号后台注册信息，AppSecret 和 IP 白名单在微信开发者平台（需先绑定 AppID）；白名单也可在公众号后台安全中心配置。
+- `doctor` 缺凭证时直接打印三步指引；遇到 IP 不在白名单，直接给出微信看到的那个 IP。
+- 补上 `npx playwright install chromium`；在线主题实验室链接改为 GitHub Pages。
+
 ## v0.2 · 2026-10-08 · 内置主题与插图卡
 
 - 新增 `theme-lab/`：六个原创排版系列（青林、白皮、陶土、蓝图、便签、墨刊），每个 3 个主色，共用一套组件库；自研 Markdown 解析、渲染和公众号兼容检查，排版不再依赖外部组件库。

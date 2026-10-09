@@ -18,10 +18,10 @@
 ## 用法
 
 ```bash
-python3 gen_image.py list                              # 看可用 provider
-python3 gen_image.py check                             # 体检
-python3 gen_image.py gen "提示词" -o cover.png --ratio 21:9
-python3 gen_image.py gen "提示词" --provider gemini
+python gen_image.py list                              # 看可用 provider
+python gen_image.py check                             # 体检
+python gen_image.py gen "提示词" -o cover.png --ratio 21:9
+python gen_image.py gen "提示词" --provider gemini
 ```
 
 第三方中转：把 `openai` / `custom` 的 `base_url` 改成中转地址，
@@ -118,8 +118,8 @@ def delegate_to_host(prompt: str, ratio: str, out: Path) -> int:
     print(f"│ 建议比例：{ratio}（约 {width}px 宽）")
     print("│")
     print("└─ 生成后执行：")
-    print(f"     python3 scripts/fit_cover.py {out} -o cover-900x383.jpg --anchor 0.22")
-    print(f"     python3 scripts/wechat_draft.py cover cover-900x383.jpg")
+    print(f"     python scripts/fit_cover.py {out} -o cover-900x383.jpg --anchor 0.22")
+    print(f"     python scripts/wechat_draft.py cover cover-900x383.jpg")
     return 0
 
 
@@ -404,7 +404,7 @@ def cmd_gen(args) -> int:
     print(f"· {provider} / {p.get('model')} 生成中（{args.ratio}）…")
     path = GENERATORS[provider](p, args.prompt, args.ratio, out)
     print(f"✓ 已生成: {path}")
-    print(f"  下一步: python3 scripts/fit_cover.py {path} -o cover-900x383.jpg --anchor 0.22")
+    print(f"  下一步: python scripts/fit_cover.py {path} -o cover-900x383.jpg --anchor 0.22")
     return 0
 
 

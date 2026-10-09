@@ -14,19 +14,16 @@
 
 ### 1.1 拿 AppID 与 AppSecret
 
-登录[微信公众平台](https://mp.weixin.qq.com) → **设置与开发 → 基本配置（开发密钥管理）**
-
-| 字段 | 说明 |
-|---|---|
-| AppID（开发者ID） | 页面上直接可见，形如 `wx1234567890abcdef` |
-| AppSecret（AppSecret） | 点「重置」才显示，**只显示一次**，务必当场保存 |
+1. **AppID**：[公众号后台](https://mp.weixin.qq.com) → 设置与开发 → 账号设置 → 注册信息，页面底部 `wx` 开头那串。
+2. **AppSecret**：管理员微信扫码登录[微信开发者平台](https://developers.weixin.qq.com/console/index?tab1=business&tab2=dataStore)，顶部「我的业务与服务」→ 下拉选「公众号」→ 输入第 1 步的 AppID 绑定，进入公众号基础信息 → 开发密钥，点「重置」。**只显示一次，当场存好。**
+3. **IP 白名单**：同一页「API IP 白名单」。也可以在公众号后台 设置与开发 → 安全中心 → IP 白名单 配置，需先设置过开发者密码（AppSecret）才能填。
 
 > ⚠️ **点「重置」会立刻作废旧密钥**。如果别处正在用会中断。
 
 ### 1.2 写入配置文件
 
 ```bash
-bash scripts/init_credentials.sh
+python scripts/init_credentials.py
 ```
 
 脚本会交互式询问（**Secret 输入不回显**，这是正常的，不是卡住了），写入 `config/wechat.credentials.json` 并自动 `chmod 600`。
@@ -67,7 +64,10 @@ errcode 40164, invalid ip 203.0.113.45, ipv6 ::ffff:203.0.113.45, not in whiteli
 
 ### 2.2 在哪配
 
-微信公众平台 → **设置与开发 → 基本配置 → IP 白名单**
+两个入口，任选其一，填完管理员扫码确认：
+
+- [微信开发者平台](https://developers.weixin.qq.com/console/index?tab1=business&tab2=dataStore) → 我的业务与服务 → 公众号 → 基础信息 → **API IP 白名单**
+- [公众号后台](https://mp.weixin.qq.com) → 设置与开发 → **安全中心 → IP 白名单**（需先设置过开发者密码 AppSecret）
 
 ### 2.3 ⚠️ 怎么找你的真实出口 IP（这里最容易踩坑）
 
@@ -112,7 +112,7 @@ errcode 40164, invalid ip 203.0.113.45 ... not in whitelist
 ### 2.6 体检
 
 ```bash
-python3 scripts/wechat_draft.py doctor
+python scripts/wechat_draft.py doctor
 ```
 
 第 1 步会同时探测境内/境外两个源并对比，明确提示该填哪个。
@@ -203,10 +203,10 @@ Gemini 中转需兼容 Google 原生协议（`{base}/v1beta/models/{model}:gener
 ### 3.5 用法
 
 ```bash
-python3 scripts/gen_image.py list                 # 看当前可用
-python3 scripts/gen_image.py check                # 体检
-python3 scripts/gen_image.py gen "提示词" --ratio 21:9          # 默认 auto_delegate
-python3 scripts/gen_image.py gen "提示词" --provider gemini    # 强制走外部
+python scripts/gen_image.py list                 # 看当前可用
+python scripts/gen_image.py check                # 体检
+python scripts/gen_image.py gen "提示词" --ratio 21:9          # 默认 auto_delegate
+python scripts/gen_image.py gen "提示词" --provider gemini    # 强制走外部
 ```
 
 比例直接按目标来，比事后裁切省事：**公众号头图用 `21:9`**。
@@ -236,7 +236,7 @@ git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git vendor-gzh
 # 2. 转为标准主题库 vendor-gzh/references/theme-{标识}.md
 # 3. 在 config/brand_voice.json 的 allowed[] 追加一行
 # 4. 校验
-python3 vendor-gzh/scripts/component_lint.py vendor-gzh
+python vendor-gzh/scripts/component_lint.py vendor-gzh
 ```
 
 要点：样式全内联、文字 `<span leaf="">` 包裹、封面风格段写进 `cover_prompt_style`。
@@ -247,21 +247,21 @@ python3 vendor-gzh/scripts/component_lint.py vendor-gzh
 
 ```bash
 # 1. 微信凭证
-bash scripts/init_credentials.sh
+python scripts/init_credentials.py
 
 # 2. IP 白名单（用境内站查 IP，或直接跑 doctor 看微信报什么）
 curl -s https://myip.ipip.net
-# → 填进公众平台 → 设置与开发 → 基本配置 → IP 白名单
+# → 填进 开发者平台 公众号基础信息 → API IP 白名单（或公众号后台 设置与开发 → 安全中心）
 
 # 3. 体检（验证 1+2 都对了）
-python3 scripts/wechat_draft.py doctor
+python scripts/wechat_draft.py doctor
 # 期望：[3] access_token ✓  [4] draft/count ✓
 
 # 4. 拉取排版 skill
 git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git vendor-gzh
 
 # 5. 生图（可选，默认用 Agent 自带能力）
-python3 scripts/gen_image.py list
+python scripts/gen_image.py list
 ```
 
 ---

@@ -72,10 +72,10 @@
 
 ```bash
 # 源头关：扫组件库反模式
-python3 scripts/component_lint.py <skill根目录>
+python scripts/component_lint.py <skill根目录>
 
 # 产物关：扫最终 HTML 合规
-python3 scripts/validate_gzh_html.py article.gzh.html
+python scripts/validate_gzh_html.py article.gzh.html
 ```
 
 - 源头关查`white-space:pre`（导致大段空白）、正文四周虚线框等 → 须 0 ERROR
@@ -217,9 +217,9 @@ api_post("draft/update", token, {"media_id": mid, "index": 0, "articles": articl
 | `custom` | 自定义 | 任意 OpenAI 兼容端点 |
 
 ```bash
-python3 scripts/gen_image.py list     # 看状态
-python3 scripts/gen_image.py check    # 体检
-python3 scripts/gen_image.py gen "提示词" -o cover.png
+python scripts/gen_image.py list     # 看状态
+python scripts/gen_image.py check    # 体检
+python scripts/gen_image.py gen "提示词" -o cover.png
 ```
 
 **云端 Agent 场景**：若该 Agent 无生图能力，把 `auto_delegate` 关掉、配一个外部 provider，整条链路就全自动了。这也是为什么 Provider 必须抽象——不能绑定单一生图服务。
@@ -241,8 +241,8 @@ AI 生图产物直接推微信会很难看，**缺一不可**：
 | 平台「AI 生成」标识 | **默认不裁**——《生成合成内容标识办法》第十条禁恶意删除显式标识；发表时记得勾选 AI 内容声明 |
 
 ```bash
-python3 scripts/fit_cover.py 生图产物.png -o cover-900x383.jpg --anchor 0.22
-python3 scripts/wechat_draft.py cover cover-900x383.jpg   # 自动写入配置为默认封面
+python scripts/fit_cover.py 生图产物.png -o cover-900x383.jpg --anchor 0.22
+python scripts/wechat_draft.py cover cover-900x383.jpg   # 自动写入配置为默认封面
 ```
 
 ⚠️ **锚点选错会切掉标题**——最容易踩的一步，务必目视检查成品。
@@ -257,7 +257,7 @@ python3 scripts/wechat_draft.py cover cover-900x383.jpg   # 自动写入配置�
 
 - [ ] 公众平台已配 IP 白名单，且是**调用方**出口 IP
 - [ ] `config/wechat.credentials.json` 已填（从 example 复制，`chmod 600`，**勿入 git**）
-- [ ] `python3 scripts/wechat_draft.py doctor` → 第4 步 `draft/count` 通过
+- [ ] `python scripts/wechat_draft.py doctor` → 第4 步 `draft/count` 通过
 - [ ] 排版产物 `validate_gzh_html.py` → **0 ERROR 0 WARN**
 - [ ] 封面已上传或在配置里填了默认 `thumb_media_id`
 - [ ] 预览页浏览器打开，样式正常
@@ -290,7 +290,7 @@ wechat-gzh-publish/
 │   ├── wechat_draft.py             # 直连微信推送（零第三方依赖）
 │   ├── fit_cover.py                # AI 生图 → 微信合规封面 900×383
 │   ├── gen_image.py                # 生图 Provider 抽象层
-│   └── init_credentials.sh         # 交互式凭证配置
+│   └── init_credentials.py         # 凭证配置（跨平台，Secret 不回显）
 ├── config/
 │   ├── wechat.credentials.json     # AppID/AppSecret（gitignore, 600）
 │   ├── brand_voice.json            # 主题注册表（锁定主主题，防漂移）
@@ -310,10 +310,10 @@ wechat-gzh-publish/
 ## 命令速查
 
 ```bash
-PY=python3
+PY=python
 
 # 凭证与诊断
-bash scripts/init_credentials.sh          # 交互式配置（Secret 不留痕）
+$PY scripts/init_credentials.py          # 凭证配置（Secret 不回显）
 $PY scripts/wechat_draft.py doctor       # 链路体检（含双源 IP 探测）
 
 # 生图
@@ -342,7 +342,7 @@ $PY scripts/wechat_draft.py rm <media_id>
 
 
 ```bash
-PY=python3
+PY=python
 $PY scripts/wechat_draft.py doctor                    # 体检
 $PY scripts/wechat_draft.py list                      # 列草稿
 $PY scripts/wechat_draft.py push article.md \

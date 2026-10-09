@@ -32,16 +32,33 @@ git clone https://github.com/laomao-ai/wechat-gzh-publish.git
 #   Cursor     → 项目 .cursor/skills/ 或 ~/.cursor/skills/
 #   其他 Agent → 问它"你的 skills 目录在哪"，放到对应位置
 
-# 2. 依赖：排版引擎仅标准库；裁封面要 Pillow；插图卡截图要 Playwright + 本机 Chrome
+# 2. 依赖：排版引擎和推送脚本仅标准库；裁封面要 Pillow；插图卡截图要 Playwright
 pip install pillow
-npm i playwright            # 只在用插图卡（模式 A）时需要
+npm i playwright                   # 只在用插图卡（模式 A）时需要
+npx playwright install chromium    # 本机没装 Chrome 时才需要
 
 # 3.（可选）备选排版组件库 vendor-gzh（AGPL-3.0，独立 clone，不随本仓库分发）
 git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git \
   <skill目录>/wechat-gzh-publish/vendor-gzh
 ```
 
-Windows 注意：`bash xxx.sh` 请用 Git Bash 或 WSL 跑；`python3` 常常叫 `python`，命令里自行替换。
+命令里写的是 `python`；macOS / Linux 上如果只有 `python3`，替换即可。
+
+## 首次配置（装完后 Agent 带用户走一遍）
+
+装完 skill 后，Agent 先跑 `python scripts/wechat_draft.py doctor`，按结果引导用户，**不要让用户把 AppSecret 贴进对话**：
+
+1. **[1] 出口 IP**：doctor 会同时探测境内、境外两个源。把「白名单应填」那个 IP 原样告诉用户。
+2. **[2] 缺凭证**：把下面三步（含链接）原样发给用户，拿到后让他自己在终端跑 `python scripts/init_credentials.py`（AppSecret 不回显）。doctor 输出里也有同样的三步。
+
+   1. **AppID**：[公众号后台](https://mp.weixin.qq.com) → 设置与开发 → 账号设置 → 注册信息，页面底部 `wx` 开头那串。
+   2. **AppSecret**：管理员微信扫码登录[微信开发者平台](https://developers.weixin.qq.com/console/index?tab1=business&tab2=dataStore)，顶部「我的业务与服务」→ 下拉选「公众号」→ 输入第 1 步的 AppID 绑定，进入公众号基础信息 → 开发密钥，点「重置」。**只显示一次，当场存好。**
+   3. **IP 白名单**：同一页「API IP 白名单」。也可以在公众号后台 设置与开发 → 安全中心 → IP 白名单 配置，需先设置过开发者密码（AppSecret）才能填。
+
+3. **[3] 报 40164 / 61004**：IP 不在白名单。把报错里 `invalid ip` 后面那串发给用户，让他按上面第 3 步填进去，管理员扫码确认。
+4. 用户说配好了，再跑一次 doctor，[3][4] 都 ✓ 才算完成。
+
+Agent 环境跑不了交互式输入时，也可以让用户照 `config/wechat.credentials.example.json` 手动建 `config/wechat.credentials.json`。
 
 ---
 
@@ -71,7 +88,7 @@ else:                 draft/add         # → 记入 state
 微信要求调用接口的 IP 在白名单。本 skill 同时探测境内/境外两个源并对比：
 
 ```bash
-python3 scripts/wechat_draft.py doctor
+python scripts/wechat_draft.py doctor
 ```
 
 为什么需要对比：**有代理时，境外查询站返回的是代理节点 IP，而微信服务器在境内、流量直连，看到的是你的真实宽带出口。**
@@ -161,11 +178,11 @@ python3 scripts/wechat_draft.py doctor
 
 ```bash
 # 渲染（产物 + 390px 预览页放在 --out 目录；图片相对路径以 --out 为基准）
-python3 theme-lab/engine/render.py article.md forest-leaf --out out/
+python theme-lab/engine/render.py article.md forest-leaf --out out/
 # 兼容检查，须 ERROR=0 WARN=0
-python3 theme-lab/engine/check.py out/article.forest-leaf.gzh.html
+python theme-lab/engine/check.py out/article.forest-leaf.gzh.html
 # 推送时用 --html 指定渲染产物
-python3 scripts/wechat_draft.py push article.md --html out/article.forest-leaf.gzh.html --cover cover.jpg
+python scripts/wechat_draft.py push article.md --html out/article.forest-leaf.gzh.html --cover cover.jpg
 ```
 
 Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `theme-lab/index.html`）：
@@ -208,7 +225,7 @@ Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `the
 # 2. 转为标准主题库 vendor-gzh/references/theme-{标识}.md
 # 3. 在 brand_voice.json 的 allowed[] 追加一行
 # 4. 校验
-python3 vendor-gzh/scripts/component_lint.py vendor-gzh
+python vendor-gzh/scripts/component_lint.py vendor-gzh
 ```
 
 配置里有完整的 `新增主题指南`。要点：样式全内联、文字 `<span leaf="">` 包裹、封面风格段写进 `cover_prompt_style`。
@@ -221,13 +238,13 @@ python3 vendor-gzh/scripts/component_lint.py vendor-gzh
 git clone --depth 1 https://github.com/isjiamu/gzh-design-skill.git vendor-gzh
 
 # 源头关：扫组件库
-python3 vendor-gzh/scripts/component_lint.py vendor-gzh
+python vendor-gzh/scripts/component_lint.py vendor-gzh
 
 # 产物关：扫最终 HTML，须 0 WARN
-python3 vendor-gzh/scripts/validate_gzh_html.py article.gzh.html
+python vendor-gzh/scripts/validate_gzh_html.py article.gzh.html
 
 # 生成带复制按钮的预览页
-python3 vendor-gzh/scripts/wrap_preview.py article.gzh.html preview/x.html
+python vendor-gzh/scripts/wrap_preview.py article.gzh.html preview/x.html
 ```
 
 **产物必须 0 ERROR 0 WARN 才交付。warning 数就是「粘进后台会掉样式的处数」。**
@@ -258,10 +275,10 @@ python3 vendor-gzh/scripts/wrap_preview.py article.gzh.html preview/x.html
 ## 步骤 3：配图
 
 ```bash
-python3 scripts/gen_image.py list                              # 看可用 provider
-python3 scripts/gen_image.py gen "提示词" --ratio 21:9 -o cover.png
-python3 scripts/fit_cover.py cover.png -o cover-900x383.jpg --anchor 0.22
-python3 scripts/wechat_draft.py cover cover-900x383.jpg       # 上传并设为默认
+python scripts/gen_image.py list                              # 看可用 provider
+python scripts/gen_image.py gen "提示词" --ratio 21:9 -o cover.png
+python scripts/fit_cover.py cover.png -o cover-900x383.jpg --anchor 0.22
+python scripts/wechat_draft.py cover cover-900x383.jpg       # 上传并设为默认
 ```
 
 **三件必做后处理**：
@@ -292,7 +309,7 @@ cp config/image_providers.example.json config/image_providers.json
 # 然后填入 api_key
 
 # 强制走外部 API（跳过宿主自生图）
-python3 scripts/gen_image.py gen "提示词" --provider gemini --ratio 21:9
+python scripts/gen_image.py gen "提示词" --provider gemini --ratio 21:9
 ```
 
 **API Key 怎么存**：写进 `config/image_providers.json`（已 gitignore），`chmod 600`。**不要在对话里粘贴明文密钥。**
@@ -317,7 +334,7 @@ python3 scripts/gen_image.py gen "提示词" --provider gemini --ratio 21:9
 
 ```bash
 # 模式 A：写 spec.json（theme / ratio: 16:9 | 3:4 | 2.35:1 | 1:1 / cards[]），渲染后截图
-python3 theme-lab/engine/cards.py img/spec.json
+python theme-lab/engine/cards.py img/spec.json
 node theme-lab/engine/shoot_cards.js img/cards     # 截图前实测：越界报错退出，字太小给提醒
 ```
 
@@ -343,7 +360,7 @@ node theme-lab/engine/shoot_cards.js img/cards     # 截图前实测：越界报
 ## 步骤 4：推送草稿箱
 
 ```bash
-python3 scripts/wechat_draft.py push article.md \
+python scripts/wechat_draft.py push article.md \
   --title "标题" --digest "摘要" --source-url "https://github.com/xxx"
 ```
 
@@ -355,28 +372,26 @@ python3 scripts/wechat_draft.py push article.md \
 其他命令：
 
 ```bash
-python3 scripts/wechat_draft.py list --count 10     # 列草稿
-python3 scripts/wechat_draft.py rm <media_id>      # 删草稿
+python scripts/wechat_draft.py list --count 10     # 列草稿
+python scripts/wechat_draft.py rm <media_id>      # 删草稿
 ```
 
 ---
 
-## 首次配置
+## 配置速查
 
-**完整配置指南见 `docs/CONFIG.md`**（含 AppSecret 申请、IP 白名单排查、生图 Provider 选型）。
-
-三步起：
+**引导流程见上文「首次配置」，完整指南见 `docs/CONFIG.md`**（含 AppSecret 申请、IP 白名单排查、生图 Provider 选型）。
 
 ```bash
-# 1. 微信凭证（AppSecret 交互式输入，不回显，自动 chmod 600）
-bash scripts/init_credentials.sh
+# 1. 微信凭证（AppSecret 不回显）
+python scripts/init_credentials.py
 
 # 2. IP 白名单 —— 必须用境内站查，境外站返回的是代理节点 IP
 curl -s https://myip.ipip.net
-# 填进：微信公众平台 → 设置与开发 → 基本配置 → IP 白名单
+# 填进：开发者平台 公众号基础信息 → API IP 白名单（或公众号后台 设置与开发 → 安全中心）
 
 # 3. 体检（验证 1+2 都对了）
-python3 scripts/wechat_draft.py doctor
+python scripts/wechat_draft.py doctor
 ```
 
 **Secret 不要在对话里粘贴**——对话会留档。

@@ -10,7 +10,7 @@ AI 生图默认是 1:1，而微信封面要求 2.35:1，本脚本按比例切出
 只做比例裁切。如确需处理，请自行用 --crop-watermark 并确认合规。
 
 用法：
-  python3 fit_cover.py <生图产物.png> [-o out.jpg] [--anchor 0.22]
+  python fit_cover.py <生图产物.png> [-o out.jpg] [--anchor 0.22]
 """
 
 from __future__ import annotations
@@ -89,7 +89,7 @@ def main() -> int:
         quality=args.quality,
     )
     print(f"✓ 已生成微信合规封面: {out}  ({WECHAT_W}×{WECHAT_H}, 2.35:1)")
-    print(f"  下一步: python3 wechat_draft.py cover {out}")
+    print(f"  下一步: python wechat_draft.py cover {out}")
     return 0
 
 
