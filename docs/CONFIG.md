@@ -215,7 +215,9 @@ python scripts/gen_image.py gen "提示词" --provider gemini    # 强制走外�
 
 ## 四、主题配置（可选）
 
-`config/brand_voice.json` 决定排版主题。
+`config/brand_voice.json` 决定排版主题，默认 `forest-leaf`（青林·叶绿）。
+
+个人账号想固定风格：复制到 `~/.config/wechat-gzh-publish/brand_voice.json`，把 `lock_primary` 改成 `true`。那份优先读取，`git pull` 不会覆盖。
 
 | 字段 | 作用 |
 |---|---|
@@ -224,7 +226,7 @@ python scripts/gen_image.py gen "提示词" --provider gemini    # 强制走外�
 | `lock_primary: true` | 锁定只用 `primary`，适合账号风格已定型 |
 | `allowed[]` | 主题清单，可自由增删 |
 
-**默认 `false`** —— 你的账号不该被别人的偏好锁死。
+仓库里默认 `false`，不替别人锁死主题。
 
 ### 加自己的主题
 

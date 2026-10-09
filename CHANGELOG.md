@@ -1,5 +1,10 @@
 # 更新记录
 
+## v0.2.2 · 2026-10-09
+
+- 默认主题改为青林·叶绿（forest-leaf），`brand_voice.json` 改为登记 theme-lab 主题。
+- 支持个人主题配置 `~/.config/wechat-gzh-publish/brand_voice.json`，优先于仓库默认，更新 skill 不会覆盖。
+
 ## v0.2.1 · 2026-10-09 · 首次配置更顺
 
 - 凭证配置改为 `python scripts/init_credentials.py`，Windows / macOS / Linux 都能跑，不再需要 bash。

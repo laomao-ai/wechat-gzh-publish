@@ -165,6 +165,8 @@ python scripts/wechat_draft.py doctor
 
 ### 默认：内置主题实验室 `theme-lab/`（推荐，无需额外 clone）
 
+**先读主题配置**：`~/.config/wechat-gzh-publish/brand_voice.json` 存在就用它，否则用仓库里的 `config/brand_voice.json`。`lock_primary: true` 时每篇都用 `primary`，不再按文章类型挑；用户本轮点名别的主题除外。仓库默认 `primary: forest-leaf`、`lock_primary: false`。
+
 六个原创系列，每个 3 个主色。**按文章类型选，不按颜色选**：
 
 | 系列 | 用途 | 适合 | 主色（第一个为默认） |
@@ -201,11 +203,9 @@ Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `the
 ### 备选：外部排版组件库 vendor-gzh
 
 
-### 先选主题（vendor-gzh 路线）
+### 主题配置字段
 
-读 `config/brand_voice.json`。
-
-**这个配置是可改的，不是硬编码：**
+`brand_voice.json` 可改，不是硬编码：
 
 | 字段 | 作用 |
 |---|---|
@@ -214,7 +214,7 @@ Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `the
 | `lock_primary: true` | 锁定只用 primary，适合账号风格已定型 |
 | `allowed[]` | 主题清单，可自由增删 |
 
-**默认是 `false`** —— 别人的账号不该被我锁死主题。
+仓库里默认 `false`，个人固定风格请改 `~/.config/` 那份。
 
 ### 想加自己的主题
 
@@ -223,7 +223,7 @@ Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `the
 ```bash
 # 1. 用主题生成器出区块库（需先 clone vendor-gzh）
 # 2. 转为标准主题库 vendor-gzh/references/theme-{标识}.md
-# 3. 在 brand_voice.json 的 allowed[] 追加一行
+# 3. 在 brand_voice.json 的 allowed[] 追加一行（vendor-gzh 主题 id 也可以登记进来）
 # 4. 校验
 python vendor-gzh/scripts/component_lint.py vendor-gzh
 ```

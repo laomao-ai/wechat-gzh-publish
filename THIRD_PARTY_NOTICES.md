@@ -25,9 +25,7 @@
 
 `vendor-gzh/` 是独立的第三方项目，以其仓库中的 LICENSE 为准。本项目的 MIT 协议不覆盖它。
 
-另外，`config/brand_voice.json` 中默认主题 `moyu-green` 的样式描述片段衍生自该组件库，
-已在该 JSON 文件内标注 `source: gzh-design-skill (AGPL-3.0)`。该片段随本仓库分发，
-使用时请注意其来源标注。
+`config/brand_voice.json` 现在只登记内置 theme-lab 的原创主题，不再包含衍生自该组件库的样式片段。
 
 ---
 

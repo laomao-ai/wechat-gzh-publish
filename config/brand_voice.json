@@ -1,47 +1,49 @@
 {
-  "_说明": "公众号排版主题注册表。对外发布时用户可自由选择/新增主题，lock_primary 仅用于个人固定风格。",
-
-  "primary": "moyu-green",
-  "_注释": "primary 是默认主题。用户可改，也可新增条目。",
-
+  "_说明": "排版主题注册表。primary 是默认主题；个人账号想固定风格，复制本文件到 ~/.config/wechat-gzh-publish/brand_voice.json 再改，那份优先，不会被 git pull 覆盖。",
+  "primary": "forest-leaf",
   "lock_primary": false,
-  "_注释": [
-    "false = 允许自由选择 allowed[] 中任意主题，也允许新增（新增时参考下方 new_theme_guide）",
-    "true  = 锁定 primary，只用这一套。适合账号风格已定型、不希望每篇漂移的个人创作者",
-    "默认值 false，因为对外发布时锁死别人的选择不合理"
-  ],
-
+  "_lock_primary": "false = 按文章类型从 allowed 里挑；true = 每篇都用 primary",
   "allowed": [
     {
-      "id": "moyu-green",
-      "name": "摸鱼绿",
-      "primary_color": "#059669",
-      "underline_css": "border-bottom:2px solid #A7F3D0;font-weight:600;",
-      "cover_prompt_style": "瑞士国际主义排版风格，大量留白，几何精准克制，无渐变无阴影无纹理，纯白背景，主色 #059669 作为唯一色彩锚点占画面比例不超过三分之一，主标题深炭灰 #111827 醒目无衬线中文字体",
-      "usage": "教程、测评、清单、工具盘点",
-      "source": "gzh-design-skill (AGPL-3.0)"
+      "id": "forest-leaf",
+      "name": "青林·叶绿",
+      "usage": "综合长文、产品发布、开源介绍、经验复盘"
+    },
+    {
+      "id": "forest-pine",
+      "name": "青林·松墨",
+      "usage": "同上，更沉稳"
+    },
+    {
+      "id": "forest-lake",
+      "name": "青林·湖青",
+      "usage": "同上，偏冷"
+    },
+    {
+      "id": "airy-cobalt",
+      "name": "白皮·钴蓝",
+      "usage": "AI 工具实测、产品速览、图文简报"
+    },
+    {
+      "id": "clay-terracotta",
+      "name": "陶土",
+      "usage": "品牌故事、个人随笔、观点长文"
+    },
+    {
+      "id": "grid-cobalt",
+      "name": "蓝图",
+      "usage": "教程、评测、操作指南"
+    },
+    {
+      "id": "journal-cherry",
+      "name": "便签",
+      "usage": "学习笔记、清单、方法论"
+    },
+    {
+      "id": "masthead-signal",
+      "name": "墨刊",
+      "usage": "行业评论、热点解读、周报"
     }
   ],
-
-  "_新增主题指南": {
-    "原则": "不要每篇文章临时生成主题，那是风格漂移的根源。要加主题，一次性登记，之后固定用。",
-    "步骤": [
-      "用 gzh-design-skill 的 theme-generator 生成区块库（生成器需从 vendor-gzh/ 获取）",
-      "确认风格后转为标准主题库：references/theme-{标识}.md",
-      "在本文件的 allowed[] 追加一行（id 用英文，name 用中文）",
-      "跑 component_lint.py 确认 0 ERROR",
-      "更新 vendor-gzh/references/theme-index.md 登记"
-    ],
-    "约束": [
-      "所有样式内联（微信不接受 <style> 标签与 class）",
-      "所有文字用 <span leaf=\"\"> 包裹，否则粘贴必掉样式",
-      "封面风格描述段写进 cover_prompt_style，供复用"
-    ]
-  },
-
-  "_封面一致性说明": [
-    "同一主题下，封面 prompt 的风格描述段应复用 allowed[].cover_prompt_style",
-    "只允许变化的是标题与副标题文字",
-    "换主题是「换预设」，不是「每篇重新描述风格」——后者会导致读者感知不到这是一个号"
-  ]
+  "_更多": "每个系列 3 个主色，完整列表见 SKILL.md 步骤 2 或 python theme-lab/engine/render.py 报错提示"
 }
