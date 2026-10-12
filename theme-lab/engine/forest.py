@@ -109,13 +109,28 @@ class Forest(Theme):
                    self.ink, leaf(b['title']), self.a, self.soft, blank()))
 
     def h3(self, b):
-        return ('<section style="margin:28px 0 14px;">'
-                # block-level, not inline-block: WeChat rewrites inline-block and the
-                # background then only covers the first line of a wrapped heading.
-                '<p style="margin:0;padding:6px 14px 6px 10px;border-radius:0 8px 8px 0;'
-                'background:linear-gradient(90deg,%s,%s);border-left:3px solid %s;'
-                'font-size:15px;line-height:1.5;color:%s;font-weight:800;">%s</p></section>'
-                % (self.mint, self.mist, self.a, self.deep, self.inline(b['text'])))
+        # 小节 = 新的一位大师/一招：上方细分隔线 + 无底色标题，和带底色的 prompt 卡拉开
+        return ('<section style="margin:40px 0 14px;padding:16px 0 0;border-top:1px dashed %s;">'
+                '<p style="margin:0;font-size:17px;line-height:1.5;color:%s;font-weight:800;">'
+                '<span style="color:%s;margin-right:6px;">%s</span>%s</p>'
+                '<section style="margin:8px 0 0;width:36px;height:3px;border-radius:2px;background:%s;">%s</section></section>'
+                % (self.soft, self.ink, self.a, leaf('◆'), self.inline(b['text']), self.a, blank()))
+
+    def prompt(self, b, n):
+        # 可复制提示词：白底实线框 + 实心标签，和标题/引语都不撞
+        head = 'PROMPT %02d' % n
+        title = ('<span style="margin-left:8px;font-size:13px;color:%s;font-weight:800;">%s</span>'
+                 % (self.ink, leaf(b['title']))) if b.get('title') else ''
+        body = ''.join('<p style="margin:0 0 6px;font-size:14px;line-height:1.85;color:%s;">%s</p>'
+                       % (self.body_color, self.inline(s.strip())) for s in b['lines'] if s.strip())
+        return ('<section style="margin:10px 0 30px;border-radius:%dpx;border:1.5px solid %s;background:#FFFFFF;overflow:hidden;">'
+                '<section style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:%s;border-bottom:1px solid %s;">'
+                '<p style="margin:0;line-height:1.6;"><span style="display:inline-block;padding:1px 8px;border-radius:4px;'
+                'background:%s;font-size:11px;color:#FFFFFF;font-weight:700;letter-spacing:1px;font-family:%s;">%s</span>%s</p>'
+                '<span style="flex-shrink:0;margin-left:8px;font-size:11px;color:%s;">%s</span></section>'
+                '<section style="padding:12px 16px 8px;">%s</section></section>'
+                % (self.radius, self.soft, self.mist, self.line, self.a, MONO, leaf(head), title,
+                   self.muted, leaf('复制给 AI ↗'), body))
 
     # -- emphasis ---------------------------------------------------------
     def keypoint(self, text):
@@ -143,11 +158,13 @@ class Forest(Theme):
 
     def callout(self, b):
         c, bg, label = self.callout_colors(b['kind'])
-        bg = self.mist if b['kind'] in ('tip', 'key') else bg
+        bg = self.mist if b['kind'] in ('tip', 'key', 'end') else bg
+        if b['kind'] == 'end':  # > [!END] 自定义标签：标题当标签用
+            c, label, b = self.a, '▸ ' + (b['title'] or '最后'), dict(b, title='')
         title = ('<p style="margin:4px 0 0;font-size:15px;line-height:1.6;color:%s;font-weight:800;">%s</p>'
                  % (self.ink, self.inline(b['title']))) if b['title'] else ''
-        body = ('<p style="margin:6px 0 0;font-size:14px;line-height:1.8;color:%s;">%s</p>'
-                % (self.body_color, self.inline(b['text']))) if b['text'] else ''
+        body = ''.join('<p style="margin:6px 0 0;font-size:14px;line-height:1.8;color:%s;">%s</p>'
+                       % (self.body_color, self.inline(t)) for t in b['text'].split('\n') if t.strip())
         return ('<section style="margin:8px 0 24px;padding:12px 16px 14px;border-radius:%dpx;background:%s;'
                 'border:1px dashed %s;">'
                 '<p style="margin:0;font-size:12px;color:%s;font-weight:800;letter-spacing:1px;">%s</p>%s%s</section>'

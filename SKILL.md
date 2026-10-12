@@ -197,6 +197,10 @@ Markdown 写法（全部组件见 `theme-lab/showcase.md`，网页预览见 `the
 | ```` ```prompt 标题 ```` | 提示词框（自动编号 PROMPT 01） |
 | `> [!TIP]` `[!NOTE]` `[!WARN]` `[!KEY]` | 提示卡 |
 | `> [!ASK] 问题` | 结尾互动 |
+| `> [!END] 标签` + 多行 `>` | 收尾卡，标题当标签、每行一段（青林完整样式，其他主题按说明卡显示） |
+| `++文字++` | 下划线，句内次重点，比加粗轻 |
+| `[文字](https://mp.weixin.qq.com/s/...)` | 往期文章可点；其他外链微信不保留，只显示文字 |
+| front matter `related: 标题::备注::URL \| …` | 文末「往期 · 接着读」，公众号链接可点 |
 | `:::gallery swipe 说明 … :::` | 多图（row / stack / swipe / scroll / frame） |
 | front matter `cover: none` | 有题图时不再出文字封面卡 |
 

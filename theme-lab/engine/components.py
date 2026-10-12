@@ -107,6 +107,7 @@ COMPONENTS = [
     ('p', '正文段落', '普通段落', '阅读主体'),
     ('strong', '加粗强调', '**文字**', '句内重点'),
     ('mark', '荧光高亮', '==文字==', '全文最想让人记住的半句话'),
+    ('underline', '下划线', '++文字++', '句内次重点，比加粗轻'),
     ('code_inline', '行内代码', '`文字`', '命令、文件名、参数'),
     ('key', '划重点', '**整段加粗**', '一节的结论'),
     ('quote', '引语', '> 句子 / > —— 出处', '金句或他人观点'),
@@ -175,7 +176,7 @@ class Theme:
 
     # == and ** may nest (==**x**== / **==x==**): match the outer one first,
     # then parse the captured text again so no raw marker leaks into the page.
-    INLINE_RE = re.compile(r'(==(?:(?!==).)+==|\*\*(?:(?!\*\*).)+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))')
+    INLINE_RE = re.compile(r'(==(?:(?!==).)+==|\+\+(?:(?!\+\+).)+\+\+|\*\*(?:(?!\*\*).)+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))')
 
     def inline(self, text):
         out = []
@@ -186,11 +187,19 @@ class Theme:
                 out.append('<strong style="%s">%s</strong>' % (self.strong_style(), self.inline(part[2:-2])))
             elif part.startswith('=='):
                 out.append('<span style="%s">%s</span>' % (self.mark_style(), self.inline(part[2:-2])))
+            elif part.startswith('++') and part.endswith('++') and len(part) > 4:
+                out.append('<span style="border-bottom:2px solid %s;padding-bottom:1px;">%s</span>' % (self.a, self.inline(part[2:-2])))
             elif part.startswith('`'):
                 out.append('<span style="%s">%s</span>' % (self.code_inline_style(), leaf(part[1:-1])))
             elif part.startswith('['):
-                label = re.match(r'\[([^\]]+)\]', part).group(1)
-                out.append('<span style="color:%s;border-bottom:1px solid %s;">%s</span>' % (self.a, self.soft, leaf(label)))
+                m = re.match(r'\[([^\]]+)\]\(([^)]+)\)', part)
+                label, url = m.group(1), m.group(2).strip()
+                st = 'color:%s;border-bottom:1px solid %s;text-decoration:none;' % (self.a, self.soft)
+                if url.startswith('https://mp.weixin.qq.com/'):
+                    # WeChat keeps hrefs only for its own article links
+                    out.append('<a href="%s" style="%s">%s</a>' % (esc(url), st, leaf(label)))
+                else:
+                    out.append('<span style="%s">%s</span>' % (st, leaf(label)))
             else:
                 out.append(leaf(part))
         return ''.join(out)
@@ -261,8 +270,9 @@ class Theme:
         for raw in meta.get('related', '').split('|'):
             raw = raw.strip()
             if raw:
-                title, _, note = raw.partition('::')
-                items.append((title.strip(), note.strip()))
+                bits = [x.strip() for x in raw.split('::')]
+                bits += [''] * (3 - len(bits))
+                items.append((bits[0], bits[1], bits[2]))
         return items
 
     def outro(self, meta):
@@ -276,9 +286,10 @@ class Theme:
                 '<section style="display:flex;align-items:flex-start;padding:10px 0;border-top:1px dashed %s;">'
                 '<span style="flex-shrink:0;margin-right:10px;font-size:12px;line-height:1.7;color:%s;font-family:%s;font-weight:700;">%s</span>'
                 '<section style="flex:1;"><p style="margin:0;font-size:14px;line-height:1.7;color:%s;font-weight:700;">%s</p>%s</section></section>'
-                % (self.line, self.a, self.mono, leaf('%02d' % (i + 1)), self.ink, leaf(t),
+                % (self.line, self.a, self.mono, leaf('%02d' % (i + 1)), self.ink,
+                   ('<a href="%s" style="color:%s;text-decoration:none;">%s</a>' % (esc(u), self.ink, leaf(t))) if u.startswith('https://mp.weixin.qq.com/') else leaf(t),
                    ('<p style="margin:2px 0 0;font-size:12px;line-height:1.7;color:%s;">%s</p>' % (self.muted, leaf(n))) if n else '')
-                for i, (t, n) in enumerate(rel))
+                for i, (t, n, u) in enumerate(rel))
             parts.append('<section style="margin:0 0 18px;">'
                          '<p style="margin:0 0 4px;font-size:12px;letter-spacing:2px;color:%s;font-weight:700;">%s</p>%s</section>'
                          % (self.muted, leaf('往期 · 接着读'), rows))
@@ -378,6 +389,7 @@ class Theme:
         'note': ('#5B6472', '#F3F4F6', '说明'),
         'warn': ('#C2620A', '#FFF4E5', '注意'),
         'key': (None, None, '重点'),
+        'end': (None, None, '最后'),
     }
 
     def callout_colors(self, kind):
@@ -387,8 +399,8 @@ class Theme:
     def callout(self, b):
         c, bg, label = self.callout_colors(b['kind'])
         title = b['title'] or label
-        body = ('<p style="margin:6px 0 0;font-size:14px;line-height:1.8;color:%s;">%s</p>'
-                % (self.body_color, self.inline(b['text']))) if b['text'] else ''
+        body = ''.join('<p style="margin:6px 0 0;font-size:14px;line-height:1.8;color:%s;">%s</p>'
+                       % (self.body_color, self.inline(t)) for t in b['text'].split('\n') if t.strip())
         return ('<section style="margin:6px 0 22px;padding:12px 14px;background:%s;border-radius:%dpx;border-left:3px solid %s;">'
                 '<p style="margin:0;font-size:14px;font-weight:700;color:%s;">%s</p>%s</section>'
                 % (bg, self.radius, c, c, self.inline(title), body))

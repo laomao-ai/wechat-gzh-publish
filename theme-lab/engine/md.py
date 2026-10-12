@@ -54,7 +54,7 @@ def split_title(item):
 
 
 LIST_RE = re.compile(r'^(- |\d+\. )')
-CALLOUT_RE = re.compile(r'^\[!(TIP|NOTE|WARN|KEY|ASK)\]\s*(.*)$', re.I)
+CALLOUT_RE = re.compile(r'^\[!(TIP|NOTE|WARN|KEY|ASK|END)\]\s*(.*)$', re.I)
 
 
 def parse(text):
@@ -123,7 +123,7 @@ def parse(text):
                 blocks.append({'t': 'ending', 'text': ' '.join(x for x in [m.group(2)] + quote[1:] if x)})
             elif m:
                 blocks.append({'t': 'callout', 'kind': m.group(1).lower(), 'title': m.group(2),
-                               'text': ' '.join(q for q in quote[1:] if q)})
+                               'text': '\n'.join(q for q in quote[1:] if q)})
             else:
                 cite = ''
                 if len(quote) > 1 and re.match(r'^(——|—|--)', quote[-1]):
