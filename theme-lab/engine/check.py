@@ -34,22 +34,28 @@ class Checker(HTMLParser):
         for pat, label in FORBIDDEN_CSS:
             if re.search(pat, style):
                 self.errors.append('<%s> 使用 %s' % (tag, label))
+        big = 0
         for size in re.findall(r'font-size\s*:\s*([\d.]+)px', style):
-            if float(size) > 24:
-                self.errors.append('字号 %spx 超过 24px' % size)
+            if float(size) > 48:
+                self.errors.append('字号 %spx 超过 48px' % size)
+            elif float(size) > 24:
+                big = float(size)  # 24~48px 只允许 ≤2 个字的展示性编号（如版心章节号「01」「终」）
         if tag not in VOID:
-            self.stack.append((tag, 'leaf' in a))
+            self.stack.append((tag, 'leaf' in a, big))
 
     def handle_endtag(self, tag):
         while self.stack:
-            t, _ = self.stack.pop()
+            t = self.stack.pop()[0]
             if t == tag:
                 break
 
     def handle_data(self, data):
         if not data.strip():
             return
-        if not any(is_leaf for _, is_leaf in self.stack):
+        big = next((s[2] for s in reversed(self.stack) if s[2]), 0)
+        if big and len(data.strip()) > 2:
+            self.errors.append('字号 %gpx 超过 24px（仅限 2 字以内的编号）：%s' % (big, data.strip()[:20]))
+        if not any(s[1] for s in self.stack):
             self.errors.append('文字未包裹 <span leaf>：%s' % data.strip()[:20])
         if re.search(r'[\u4e00-\u9fff][,.!?;:](?!\d)', data):
             self.warns.append('中文后出现半角标点：%s' % data.strip()[:24])
