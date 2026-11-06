@@ -1,6 +1,6 @@
 ---
 name: wechat-gzh-publish
-description: 公众号发布前的四步工作流——质检（标题/结构/内容）→ 排版（校验零警告）→ 配图（封面生图+裁切）→ 推送草稿箱（幂等更新）。当用户说「发公众号」「推草稿箱」「公众号排版」「帮我看看这稿行不行」「起个标题」「同步到草稿箱」，或需要把 Markdown 变成公众号文章并送进后台草稿箱时使用。覆盖内容质检、标题优化、六个内置原创主题排版（青林/白皮/陶土/蓝图/便签/墨刊）、代码渲染插图卡、微信平台合规校验、封面上传、正文图上传、幂等草稿更新、出口 IP 探测。
+description: 公众号发布前的四步工作流——质检（标题/结构/内容）→ 排版（校验零警告）→ 配图（封面生图+裁切）→ 推送草稿箱（幂等更新）。当用户说「发公众号」「推草稿箱」「公众号排版」「帮我看看这稿行不行」「起个标题」「同步到草稿箱」，或需要把 Markdown 变成公众号文章并送进后台草稿箱时使用。覆盖内容质检、标题优化、七个内置原创主题排版（青林/白皮/陶土/蓝图/便签/墨刊/版心）、代码渲染插图卡、微信平台合规校验、封面上传、正文图上传、幂等草稿更新、出口 IP 探测。
 agent_created: true
 ---
 
@@ -103,7 +103,7 @@ python scripts/wechat_draft.py doctor
 
 ```
 ① 质检 → 标题 + 结构 + 内容（references/quality-check.md）→ 用户确认
-② 排版 → 按文章类型选系列（theme-lab 六选一）→ 渲染 → 校验到 0 WARN
+② 排版 → 按文章类型选系列（theme-lab 七选一）→ 渲染 → 校验到 0 WARN
 ③ 配图 → 插图卡代码渲染（头图 2.35:1 + 方图 1:1），或生图 + fit_cover
 ④ 推送 → 直连草稿箱（同 slug 自动 update）
 ⑤ 人工点「发表」
@@ -167,7 +167,7 @@ python scripts/wechat_draft.py doctor
 
 **先读主题配置**：`~/.config/wechat-gzh-publish/brand_voice.json` 存在就用它，否则用仓库里的 `config/brand_voice.json`。`lock_primary: true` 时每篇都用 `primary`，不再按文章类型挑；用户本轮点名别的主题除外。仓库默认 `primary: forest-leaf`、`lock_primary: false`。
 
-六个原创系列，每个 3 个主色。**按文章类型选，不按颜色选**：
+七个原创系列，前六个各 3 个主色，版心 2 个。**按文章类型选，不按颜色选**：
 
 | 系列 | 用途 | 适合 | 主色（第一个为默认） |
 |---|---|---|---|
@@ -177,6 +177,9 @@ python scripts/wechat_draft.py doctor
 | `grid` 蓝图 | 实操教程 | 教程、评测、操作指南 | cobalt / signal / safety |
 | `journal` 便签 | 知识手帐 | 学习笔记、清单、方法论 | cherry / ink / grass |
 | `masthead` 墨刊 | 头条热点 | 行业评论、热点解读、周报 | signal / volt / mint |
+| `banxin` 版心 | 纸墨克制 | 产品发布、长文、观点；纸白底宋体，大号朱砂章节号，不出目录 | zhusha 朱砂 / moss 苔绿 |
+
+版心的写法要点：段落短（两三行一段）、关键句 `**加粗**`，少用提示卡、卡片组、步骤条，让文字自己站住。视频占位可写一行 `【视频位：说明】`。
 
 ```bash
 # 渲染（产物 + 390px 预览页放在 --out 目录；图片相对路径以 --out 为基准）
@@ -382,6 +385,20 @@ python scripts/wechat_draft.py rm <media_id>      # 删草稿
 
 ---
 
+### 改已有草稿（作者在后台手改过时必走）
+
+作者在公众号后台手改过的稿，不要拿本地 Markdown 重推，会把他的改动冲掉。以草稿箱现有内容为底：
+
+```bash
+# 1. 拉回现有正文存成基准（draft/get），在这份 HTML 上增量改，另存为 new.html
+# 2. 安全更新：先比对基准，后台有新改动就停；自动修 &#39;；推后报告 style 丢失数
+python scripts/draft_update.py --mid <media_id> --base base.html --content new.html \
+    [--cover cover.jpg --crop235 0_0_1_1 --crop11 0.5744_0_1_1] [--title 新标题]
+```
+
+- draft/get 返回的 `thumb_media_id` 为空，更新时必须重新上传封面拿永久素材 id（脚本会自动下载现封面重传）。
+- 封面裁剪：`pic_crop_235_1` 定 2.35:1 主图、`pic_crop_1_1` 定 1:1 方图，值为「左_上_右_下」比例。`push` 不带裁剪参数，换封面用 `draft_update.py`。
+
 ## 配置速查
 
 **引导流程见上文「首次配置」，完整指南见 `docs/CONFIG.md`**（含 AppSecret 申请、IP 白名单排查、生图 Provider 选型）。
@@ -422,6 +439,10 @@ errcode 40164, invalid ip 203.0.113.45 ... not in whitelist
 | 正文图不显示 | 还是本地相对路径 | 先 `media/uploadimg` |
 | 封面标题被切掉 | 裁切锚点不对 | `--anchor 0.22` |
 
+### draft/get 的 `&#39;` 会让 update 清空样式
+
+draft/get 回来的 HTML 里，style 中的字体名引号被转成 `&#39;`。原样 draft/update，微信会把整条 style 清掉（标题样式全丢）。update 前把 `&#39;` 换回 `'`，推后数一遍 style。`scripts/draft_update.py` 已处理。
+
 ### 微信两接口的 articles 结构不同（最隐蔽的坑）
 ```python
 api_post("draft/add", token, {"articles": [article]})     # 数组
@@ -450,7 +471,7 @@ api_post("draft/update", token, {"media_id": mid,
 
 ### 已实现
 
-- **六个内置原创主题** —— `theme-lab/`，18 个配色，同一套组件库；网页预览 `theme-lab/index.html`
+- **七个内置原创主题** —— `theme-lab/`，20 个配色，同一套组件库；网页预览 `theme-lab/index.html`
 - **插图卡** —— `theme-lab/engine/cards.py`，五种骨架、四种比例，截图前自动校验
 
 - **质检** —— 见 `references/quality-check.md`

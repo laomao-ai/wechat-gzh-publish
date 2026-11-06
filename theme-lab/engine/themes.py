@@ -482,8 +482,10 @@ from forest import Forest  # noqa: E402
 from journal import Journal  # noqa: E402
 from airy import Airy  # noqa: E402
 
+from banxin import Banxin  # noqa: E402
+
 # Active catalog shown in the gallery, in recommended order.
-THEMES = [Forest, Airy, Clay, Grid, Journal, Masthead]
+THEMES = [Forest, Airy, Clay, Grid, Journal, Masthead, Banxin]
 # Retired but kept: can be re-enabled or mined for parts.
 LEGACY = {'tint': Tint}
 
@@ -506,6 +508,8 @@ TYPESET = {
     'journal':  (15, 2.0,  0.8, 26, 16, False, '#45403A'),
     # 评论: newspaper column, tight leading, narrow margin.
     'masthead': (15, 1.75, 0.3, 20, 12, True,  '#2B2B2B'),
+    # 版心 · 纸墨: 纸白底宋体标题，朱砂只盖在要紧处。
+    'banxin':   (15, 1.9,  0.5, 22, 18, False, '#3A3733'),
 }
 
 for _T in THEMES:
